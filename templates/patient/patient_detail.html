@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>{{ patient.full_name }}</h3>
+    <table class="table table-bordered w-50">
+        <tr><th>Age</th><td>{{ patient.age }}</td></tr>
+        <tr><th>Gender</th><td>{{ patient.get_gender_display }}</td></tr>
+        <tr><th>Ward</th><td>{{ patient.ward.name|default:"—" }}</td></tr>
+        <tr><th>Assigned Counsellor</th><td>{{ patient.assigned_counsellor|default:"Unassigned" }}</td></tr>
+        <tr><th>Guardian</th><td>{{ patient.guardian_name }} ({{ patient.guardian_contact }})</td></tr>
+        <tr><th>Admission Date</th><td>{{ patient.admission_date }}</td></tr>
+    </table>
+    <!-- Observation timeline will be added here in Module 4 -->
+</div>
+{% endblock %}

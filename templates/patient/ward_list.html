@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between mb-3">
+        <h3>Wards</h3>
+        <a href="{% url 'patient:ward_add' %}" class="btn btn-primary">+ Add Ward</a>
+    </div>
+    <table class="table table-bordered">
+        <thead><tr><th>Name</th><th>Capacity</th><th>Description</th></tr></thead>
+        <tbody>
+            {% for ward in wards %}
+            <tr><td>{{ ward.name }}</td><td>{{ ward.capacity }}</td><td>{{ ward.description }}</td></tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No wards yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
