@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Counsellor Dashboard</h3>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center p-3">
+                <h5>{{ assigned_patients_count }}</h5><p class="mb-0 text-muted">Assigned Patients</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3">
+                <h5>{{ todays_observations }}</h5><p class="mb-0 text-muted">Today's Observations</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3">
+                <h5>{{ pending_observations }}</h5><p class="mb-0 text-muted">Pending Today</p>
+            </div>
+        </div>
+    </div>
+
+    <a href="{% url 'observation:observation_add' %}" class="btn btn-primary mb-3">+ Record Observation</a>
+    <a href="{% url 'inventory:request_add' %}" class="btn btn-outline-primary mb-3">+ Request Resources</a>
+
+    <h5>Recent Observations</h5>
+    <table class="table table-bordered">
+        <thead><tr><th>Date</th><th>Patient</th><th>POI</th><th>Priority</th></tr></thead>
+        <tbody>
+            {% for obs in recent_observations %}
+            <tr><td>{{ obs.date }}</td><td>{{ obs.patient.full_name }}</td><td>{{ obs.poi_score }}</td><td>{{ obs.get_priority_level_display }}</td></tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">No observations yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

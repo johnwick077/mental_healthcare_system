@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Store Dashboard</h3>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card text-center p-3">
+                <h5>{{ pending_requests_count }}</h5><p class="mb-0 text-muted">Pending Requests</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3">
+                <h5>{{ issued_requests_count }}</h5><p class="mb-0 text-muted">Issued Requests</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-3">
+                <h5>{{ low_stock_items|length }}</h5><p class="mb-0 text-muted">Low Stock Items</p>
+            </div>
+        </div>
+    </div>
+
+    <a href="{% url 'inventory:pending_requests' %}" class="btn btn-primary mb-3">View Pending Requests</a>
+    <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline-primary mb-3">View Inventory</a>
+
+    <h5>Stock Levels</h5>
+    <canvas id="stockChart" height="100"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('stockChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ stock_labels|safe }},
+        datasets: [{
+            label: 'Stock Quantity',
+            data: {{ stock_values|safe }},
+            backgroundColor: '#0d6efd'
+        }]
+    }
+});
+</script>
+{% endblock %}

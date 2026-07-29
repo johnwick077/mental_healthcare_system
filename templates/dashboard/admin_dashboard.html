@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Admin Dashboard</h3>
+    <div class="mb-4">
+        <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Users</a>
+        <a href="{% url 'patient:patient_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Patients</a>
+        <a href="{% url 'patient:ward_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Wards</a>
+        <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Inventory</a>
+        <a href="{% url 'inventory:pending_requests' %}" class="btn btn-outline-dark btn-sm">Pending Requests</a>
+    </div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <h5>{{ total_patients }}</h5><p class="mb-0 text-muted">Total Patients</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <h5>{{ total_counsellors }}</h5><p class="mb-0 text-muted">Counsellors</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <h5>{{ todays_observations }}</h5><p class="mb-0 text-muted">Today's Observations</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center p-3">
+                <h5>{{ pending_requests }}</h5><p class="mb-0 text-muted">Pending Requests</p>
+            </div>
+        </div>
+    </div>
+
+    {% if low_stock_count > 0 %}
+    <div class="alert alert-warning">⚠ {{ low_stock_count }} item(s) are running low on stock.</div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <h6>Observation Trend (Last 7 Days)</h6>
+            <canvas id="trendChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <h6>Today's Patient Priority Levels</h6>
+            <canvas id="priorityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+        labels: {{ trend_labels|safe }},
+        datasets: [{
+            label: 'Observations',
+            data: {{ trend_counts|safe }},
+            borderColor: '#0d6efd',
+            tension: 0.3
+        }]
+    }
+});
+
+new Chart(document.getElementById('priorityChart'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ priority_labels|safe }},
+        datasets: [{
+            data: {{ priority_counts|safe }},
+            backgroundColor: ['#198754', '#ffc107', '#fd7e14', '#dc3545']
+        }]
+    }
+});
+</script>
+{% endblock %}

@@ -1,13 +1,11 @@
 from django.urls import path
 from django.http import HttpResponse
+from .views import AdminDashboardView, CounsellorDashboardView, StoreDashboardView
 
 app_name = 'dashboard'
 
-def temp_view(request, name):
-    return HttpResponse(f"{name} dashboard placeholder — Module 6 pending")
-
 urlpatterns = [
-    path('admin/', lambda r: temp_view(r, 'Admin'), name='admin_dashboard'),
-    path('counsellor/', lambda r: temp_view(r, 'Counsellor'), name='counsellor_dashboard'),
-    path('store/', lambda r: temp_view(r, 'Store'), name='store_dashboard'),
+    path('admin/', AdminDashboardView.as_view(), name='admin_dashboard'),
+    path('counsellor/', CounsellorDashboardView.as_view(), name='counsellor_dashboard'),
+    path('store/', StoreDashboardView.as_view(), name='store_dashboard'),
 ]

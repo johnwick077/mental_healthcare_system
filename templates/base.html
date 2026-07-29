@@ -7,6 +7,27 @@
 </head>
 <body>
     <div class="container-fluid">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">MHCore</a>
+                {% if user.is_authenticated %}
+                <div class="d-flex">
+                    {% if user.role == 'ADMIN' %}
+                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a>
+                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'accounts:user_list' %}">Users</a>
+                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'patient:patient_list' %}">Patients</a>
+                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'patient:ward_list' %}">Wards</a>
+                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'inventory:inventory_list' %}">Inventory</a>
+                    {% elif user.role == 'COUNSELLOR' %}
+                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'dashboard:counsellor_dashboard' %}">Dashboard</a>
+                    {% elif user.role == 'STORE_MANAGER' %}
+                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'dashboard:store_dashboard' %}">Dashboard</a>
+                    {% endif %}
+                        <a class="btn btn-outline-light btn-sm" href="{% url 'accounts:logout' %}">Logout</a>
+                </div>
+                {% endif %}
+            </div>
+        </nav>
         {% block content %}{% endblock %}
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
