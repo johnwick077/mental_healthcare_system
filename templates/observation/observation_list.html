@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>My Observation History</h3>
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+            <tr><th>Date</th><th>Patient</th><th>Mood</th><th>POI Score</th><th>Priority</th></tr>
+        </thead>
+        <tbody>
+            {% for obs in observations %}
+            <tr>
+                <td>{{ obs.date }} {{ obs.time }}</td>
+                <td>{{ obs.patient.full_name }}</td>
+                <td>{{ obs.get_mood_display }}</td>
+                <td>{{ obs.poi_score }}</td>
+                <td>
+                    {% if obs.priority_level == 'STABLE' %}<span class="badge bg-success">{% elif obs.priority_level == 'NEEDS_OBSERVATION' %}<span class="badge bg-warning text-dark">{% elif obs.priority_level == 'NEEDS_ATTENTION' %}<span class="badge bg-orange">{% else %}<span class="badge bg-danger">{% endif %}
+                    {{ obs.get_priority_level_display }}</span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">No observations recorded yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if is_paginated %}
+    <nav>
+        <ul class="pagination">
+            {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

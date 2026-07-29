@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>My Resource Requests</h3>
+    <table class="table table-bordered">
+        <thead><tr><th>ID</th><th>Patient</th><th>Status</th><th>Requested At</th></tr></thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.id }}</td><td>{{ req.patient.full_name }}</td>
+                <td><span class="badge bg-secondary">{{ req.get_status_display }}</span></td>
+                <td>{{ req.requested_at }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">No requests yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

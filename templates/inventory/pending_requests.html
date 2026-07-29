@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Pending Resource Requests</h3>
+    <table class="table table-bordered">
+        <thead><tr><th>ID</th><th>Patient</th><th>Requested By</th><th>Items</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.id }}</td>
+                <td>{{ req.patient.full_name }}</td>
+                <td>{{ req.requested_by }}</td>
+                <td>{% for item in req.items.all %}{{ item.quantity_requested }}x {{ item.item.name }}<br>{% endfor %}</td>
+                <td>
+                    <form method="post" action="{% url 'inventory:approve_request' req.pk %}" style="display:inline">
+                        {% csrf_token %}<button class="btn btn-sm btn-success">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'inventory:reject_request' req.pk %}" style="display:inline">
+                        {% csrf_token %}<button class="btn btn-sm btn-danger">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center">No pending requests.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

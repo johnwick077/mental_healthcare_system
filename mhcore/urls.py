@@ -25,6 +25,8 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('dashboard/', include('dashboard.urls')),
     path('patients/', include('patient.urls')),
+    path('observations/', include('observation.urls')),
+    path('inventory/', include('inventory.urls')),
     path('', lambda request: redirect('accounts:login')),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

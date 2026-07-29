@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Observation Timeline — {{ patient.full_name }}</h3>
+    <div class="timeline">
+        {% for obs in observations %}
+        <div class="card mb-2">
+            <div class="card-body">
+                <h6 class="card-title">{{ obs.date }} at {{ obs.time }}</h6>
+                <p class="mb-1"><strong>Mood:</strong> {{ obs.get_mood_display }} | <strong>Behaviour:</strong> {{ obs.get_behaviour_display }}</p>
+                <p class="mb-1"><strong>Sleep:</strong> {{ obs.get_sleep_quality_display }} | <strong>Appetite:</strong> {{ obs.get_appetite_display }} | <strong>Hygiene:</strong> {{ obs.get_personal_hygiene_display }}</p>
+                <p class="mb-1"><strong>POI Score:</strong> {{ obs.poi_score }} — {{ obs.get_priority_level_display }}</p>
+                {% if obs.remarks %}<p class="text-muted small mb-0">{{ obs.remarks }}</p>{% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p>No observations recorded for this patient yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

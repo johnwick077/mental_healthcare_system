@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4" style="max-width: 700px;">
+    <h3>Request Personal Care Resources</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">{{ form.patient.label }}</label>
+            {{ form.patient }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">{{ form.remarks.label }}</label>
+            {{ form.remarks }}
+        </div>
+        <h5>Items</h5>
+        {{ formset.management_form }}
+        {% for f in formset %}
+        <div class="row g-2 mb-2">
+            <div class="col-6">{{ f.item }}</div>
+            <div class="col-4">{{ f.quantity_requested }}</div>
+            <div class="col-2">{{ f.DELETE }}</div>
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary mt-2">Submit Request</button>
+    </form>
+</div>
+{% endblock %}
