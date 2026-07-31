@@ -23,7 +23,8 @@
 
     <a href="{% url 'inventory:pending_requests' %}" class="btn btn-primary mb-3">View Pending Requests</a>
     <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline-primary mb-3">View Inventory</a>
-
+    <a href="{% url 'reports:inventory_report' %}" class="btn btn-outline-secondary btn-sm me-2">Inventory Report</a>
+    <a href="{% url 'reports:resource_usage_report' %}" class="btn btn-outline-secondary btn-sm">Usage Report</a>
     <h5>Stock Levels</h5>
     <canvas id="stockChart" height="100"></canvas>
 </div>

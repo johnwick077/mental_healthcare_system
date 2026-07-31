@@ -9,6 +9,14 @@
         <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Inventory</a>
         <a href="{% url 'inventory:pending_requests' %}" class="btn btn-outline-dark btn-sm">Pending Requests</a>
     </div>
+    <div class="mb-4">
+    <h6>Reports</h6>
+    <a href="{% url 'reports:daily_report' %}" class="btn btn-outline-secondary btn-sm me-2">Daily Report</a>
+    <a href="{% url 'reports:weekly_report' %}" class="btn btn-outline-secondary btn-sm me-2">Weekly Report</a>
+    <a href="{% url 'reports:monthly_report' %}" class="btn btn-outline-secondary btn-sm me-2">Monthly Report</a>
+    <a href="{% url 'reports:inventory_report' %}" class="btn btn-outline-secondary btn-sm me-2">Inventory Report</a>
+    <a href="{% url 'reports:resource_usage_report' %}" class="btn btn-outline-secondary btn-sm">Resource Usage Report</a>
+    </div>
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="card text-center p-3">
