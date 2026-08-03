@@ -2,6 +2,16 @@
 {% block content %}
 <div class="container mt-4">
     <h3>Pending Resource Requests</h3>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Search by patient name..." value="{{ request.GET.search }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">Search</button>
+        </div>
+    </form>
+
     <table class="table table-bordered">
         <thead><tr><th>ID</th><th>Patient</th><th>Requested By</th><th>Items</th><th>Actions</th></tr></thead>
         <tbody>
@@ -21,9 +31,23 @@
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="5" class="text-center">No pending requests.</td></tr>
+            <tr><td colspan="5" class="text-center">No pending requests found.</td></tr>
             {% endfor %}
         </tbody>
     </table>
+
+    {% if is_paginated %}
+    <nav>
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Previous</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 {% endblock %}

@@ -28,18 +28,27 @@ class ObservationCreateView(LoginRequiredMixin, CreateView):
 
 @method_decorator(role_required('COUNSELLOR'), name='dispatch')
 class ObservationListView(LoginRequiredMixin, ListView):
-    """
-    Counsellor's own observation history — most recent first.
-    """
     model = DailyObservation
     template_name = 'observation/observation_list.html'
     context_object_name = 'observations'
     paginate_by = 10
 
     def get_queryset(self):
-        return DailyObservation.objects.filter(
+        qs = DailyObservation.objects.filter(
             counsellor=self.request.user
         ).select_related('patient')
+        search = self.request.GET.get('search')
+        priority = self.request.GET.get('priority')
+        if search:
+            qs = qs.filter(patient__full_name__icontains=search)
+        if priority:
+            qs = qs.filter(priority_level=priority)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['priority_choices'] = DailyObservation.PRIORITY_CHOICES
+        return context
 
 
 class PatientObservationHistoryView(LoginRequiredMixin, ListView):

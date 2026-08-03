@@ -10,6 +10,7 @@ from django.utils.decorators import method_decorator
 from .decorators import role_required
 from .models import User
 from .forms import AdminUserCreateForm, AdminUserEditForm
+from .models import Notification
 
 
 @method_decorator(role_required('ADMIN'), name='dispatch')
@@ -22,8 +23,11 @@ class UserListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         qs = User.objects.all().order_by('username')
         role = self.request.GET.get('role')
+        search = self.request.GET.get('search')
         if role:
             qs = qs.filter(role=role)
+        if search:
+            qs = qs.filter(username__icontains=search)
         return qs
 
 
@@ -61,4 +65,18 @@ def logout_view(request):
     logout(request)
     return redirect('accounts:login')
 
-# Create your views here.
+class NotificationListView(LoginRequiredMixin, ListView):
+    model = Notification
+    template_name = 'accounts/notifications.html'
+    context_object_name = 'notifications'
+
+    def get_queryset(self):
+        return Notification.objects.filter(recipient=self.request.user)
+
+
+def mark_notification_read(request, pk):
+    notif = Notification.objects.filter(pk=pk, recipient=request.user).first()
+    if notif:
+        notif.is_read = True
+        notif.save()
+    return redirect('accounts:notifications')

@@ -2,6 +2,22 @@
 {% block content %}
 <div class="container mt-4">
     <h3>My Observation History</h3>
+    <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="search" class="form-control" placeholder="Search patient..." value="{{ request.GET.search }}">
+    </div>
+    <div class="col-md-3">
+        <select name="priority" class="form-select">
+            <option value="">All Priorities</option>
+            {% for val, label in priority_choices %}
+            <option value="{{ val }}" {% if request.GET.priority == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-secondary w-100">Filter</button>
+    </div>
+</form>
     <table class="table table-bordered table-hover">
         <thead class="table-light">
             <tr><th>Date</th><th>Patient</th><th>Mood</th><th>POI Score</th><th>Priority</th></tr>

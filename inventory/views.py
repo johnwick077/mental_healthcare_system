@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, View
 from django.shortcuts import redirect, get_object_or_404
@@ -27,6 +26,13 @@ class ResourceRequestCreateView(LoginRequiredMixin, CreateView):
             self.object = form.save()
             formset.instance = self.object
             formset.save()
+
+            from accounts.signals import notify_store_managers
+            notify_store_managers(
+                'PENDING_REQUEST',
+                f"New resource request from {self.request.user} for {self.object.patient.full_name}."
+            )
+
             return redirect(self.success_url)
         return self.render_to_response(self.get_context_data(form=form))
 
@@ -44,21 +50,34 @@ class MyRequestsListView(LoginRequiredMixin, ListView):
     model = ResourceRequest
     template_name = 'inventory/my_requests.html'
     context_object_name = 'requests'
+    paginate_by = 10
 
     def get_queryset(self):
-        return ResourceRequest.objects.filter(requested_by=self.request.user)
+        qs = ResourceRequest.objects.filter(requested_by=self.request.user)
+        status = self.request.GET.get('status')
+        if status:
+            qs = qs.filter(status=status)
+        return qs
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['status_choices'] = ResourceRequest.STATUS_CHOICES
+        return context
 
-# ---------- Store Manager side: approve / reject / issue ----------
 
 @method_decorator(role_required('STORE_MANAGER'), name='dispatch')
 class PendingRequestsListView(LoginRequiredMixin, ListView):
     model = ResourceRequest
     template_name = 'inventory/pending_requests.html'
     context_object_name = 'requests'
+    paginate_by = 10
 
     def get_queryset(self):
-        return ResourceRequest.objects.filter(status=ResourceRequest.STATUS_PENDING)
+        qs = ResourceRequest.objects.filter(status=ResourceRequest.STATUS_PENDING)
+        search = self.request.GET.get('search')
+        if search:
+            qs = qs.filter(patient__full_name__icontains=search)
+        return qs
 
 
 @method_decorator(role_required('STORE_MANAGER'), name='dispatch')
@@ -114,4 +133,14 @@ class InventoryListView(LoginRequiredMixin, ListView):
     model = Inventory
     template_name = 'inventory/inventory_list.html'
     context_object_name = 'inventory_items'
-    queryset = Inventory.objects.select_related('item').all()
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = Inventory.objects.select_related('item').all()
+        search = self.request.GET.get('search')
+        low_only = self.request.GET.get('low_stock')
+        if search:
+            qs = qs.filter(item__name__icontains=search)
+        if low_only:
+            qs = [inv for inv in qs if inv.is_low_stock()]
+        return qs

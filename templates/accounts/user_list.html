@@ -16,7 +16,9 @@
             </select>
         </div>
     </form>
-
+<div class="col-md-3">
+    <input type="text" name="search" class="form-control" placeholder="Search username..." value="{{ request.GET.search }}">
+</div>
     <table class="table table-bordered table-hover">
         <thead class="table-light"><tr><th>Username</th><th>Name</th><th>Role</th><th>Active</th><th>Actions</th></tr></thead>
         <tbody>

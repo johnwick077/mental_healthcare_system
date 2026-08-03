@@ -5,15 +5,33 @@
         <h3>Wards</h3>
         <a href="{% url 'patient:ward_add' %}" class="btn btn-primary">+ Add Ward</a>
     </div>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Search ward name..." value="{{ request.GET.search }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-secondary w-100">Search</button>
+        </div>
+    </form>
+
     <table class="table table-bordered">
         <thead><tr><th>Name</th><th>Capacity</th><th>Description</th></tr></thead>
         <tbody>
             {% for ward in wards %}
             <tr><td>{{ ward.name }}</td><td>{{ ward.capacity }}</td><td>{{ ward.description }}</td></tr>
             {% empty %}
-            <tr><td colspan="3" class="text-center">No wards yet.</td></tr>
+            <tr><td colspan="3" class="text-center">No wards found.</td></tr>
             {% endfor %}
         </tbody>
     </table>
+
+    {% if is_paginated %}
+    <nav><ul class="pagination">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul></nav>
+    {% endif %}
 </div>
 {% endblock %}

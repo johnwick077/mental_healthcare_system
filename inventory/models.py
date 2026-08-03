@@ -1,7 +1,8 @@
 from django.db import models
 from django.conf import settings
 from patient.models import Patient
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class ResourceItem(models.Model):
     """
@@ -91,3 +92,12 @@ class IssueHistory(models.Model):
 
     def __str__(self):
         return f"{self.quantity_issued} x {self.item.name} -> {self.request.patient.full_name}"
+
+@receiver(post_save, sender=Inventory)
+def check_low_stock(sender, instance, **kwargs):
+    if instance.is_low_stock():
+        from accounts.signals import notify_store_managers
+        notify_store_managers(
+            'LOW_STOCK',
+            f"{instance.item.name} is low on stock ({instance.quantity_in_stock} {instance.item.unit} left)."
+        )

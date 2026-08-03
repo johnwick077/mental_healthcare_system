@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Notifications</h3>
+    <ul class="list-group">
+        {% for n in notifications %}
+        <li class="list-group-item d-flex justify-content-between align-items-center {% if not n.is_read %}list-group-item-warning{% endif %}">
+            <span>{{ n.message }} <small class="text-muted">({{ n.created_at|timesince }} ago)</small></span>
+            {% if not n.is_read %}
+            <a href="{% url 'accounts:mark_notification_read' n.pk %}" class="btn btn-sm btn-outline-secondary">Mark Read</a>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li class="list-group-item">No notifications.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

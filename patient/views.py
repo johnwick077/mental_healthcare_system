@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.urls import reverse_lazy
@@ -51,7 +50,7 @@ class PatientUpdateView(LoginRequiredMixin, UpdateView):
 class PatientDetailView(LoginRequiredMixin, DetailView):
     """
     Accessible to Admin (all patients) and Counsellor (only assigned patients) —
-    access restriction refined further in Module 4 once observations exist.
+    access restriction refined further once needed.
     """
     model = Patient
     template_name = 'patient/patient_detail.html'
@@ -71,3 +70,11 @@ class WardListView(LoginRequiredMixin, ListView):
     model = Ward
     template_name = 'patient/ward_list.html'
     context_object_name = 'wards'
+    paginate_by = 10
+
+    def get_queryset(self):
+        qs = Ward.objects.all()
+        search = self.request.GET.get('search')
+        if search:
+            qs = qs.filter(name__icontains=search)
+        return qs

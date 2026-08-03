@@ -2,6 +2,18 @@
 {% block content %}
 <div class="container mt-4">
     <h3>Inventory Stock</h3>
+    <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="search" class="form-control" placeholder="Search item..." value="{{ request.GET.search }}">
+    </div>
+    <div class="col-md-3 form-check mt-2">
+        <input type="checkbox" name="low_stock" value="1" class="form-check-input" id="lowStockCheck" {% if request.GET.low_stock %}checked{% endif %} onchange="this.form.submit()">
+        <label class="form-check-label" for="lowStockCheck">Low stock only</label>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-secondary w-100">Search</button>
+    </div>
+</form>
     <table class="table table-bordered">
         <thead><tr><th>Item</th><th>Stock</th><th>Status</th></tr></thead>
         <tbody>
