@@ -2,44 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mental Healthcare System{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .table-responsive-wrapper { overflow-x: auto; }
+        @media (max-width: 576px) {
+            .container, .container-fluid { padding-left: 10px; padding-right: 10px; }
+            .card { margin-bottom: 10px; }
+            h3 { font-size: 1.3rem; }
+        }
+    </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="/">MHCore</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-3">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">MHCore</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
                 {% if user.is_authenticated %}
-                <div class="d-flex">
+                <div class="d-flex flex-wrap ms-auto align-items-center">
                     {% if user.role == 'ADMIN' %}
-                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a>
-                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'accounts:user_list' %}">Users</a>
-                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'patient:patient_list' %}">Patients</a>
-                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'patient:ward_list' %}">Wards</a>
-                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'inventory:inventory_list' %}">Inventory</a>
+                        <a class="btn btn-outline-light btn-sm me-2 mb-1" href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a>
+                        <a class="btn btn-outline-light btn-sm me-2 mb-1" href="{% url 'accounts:user_list' %}">Users</a>
+                        <a class="btn btn-outline-light btn-sm me-2 mb-1" href="{% url 'patient:patient_list' %}">Patients</a>
+                        <a class="btn btn-outline-light btn-sm me-2 mb-1" href="{% url 'patient:ward_list' %}">Wards</a>
+                        <a class="btn btn-outline-light btn-sm me-2 mb-1" href="{% url 'inventory:inventory_list' %}">Inventory</a>
                     {% elif user.role == 'COUNSELLOR' %}
-                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'dashboard:counsellor_dashboard' %}">Dashboard</a>
+                        <a class="btn btn-outline-light btn-sm me-2 mb-1" href="{% url 'dashboard:counsellor_dashboard' %}">Dashboard</a>
                     {% elif user.role == 'STORE_MANAGER' %}
-                        <a class="btn btn-outline-light btn-sm me-2" href="{% url 'dashboard:store_dashboard' %}">Dashboard</a>
+                        <a class="btn btn-outline-light btn-sm me-2 mb-1" href="{% url 'dashboard:store_dashboard' %}">Dashboard</a>
                     {% endif %}
-                        <a class="btn btn-outline-light btn-sm" href="{% url 'accounts:logout' %}">Logout</a>
+                    <a class="btn btn-outline-light btn-sm me-2 mb-1 position-relative" href="{% url 'accounts:notifications' %}">
+                        Notifications
+                        {% with unread=user.notifications.all %}
+                        {% if unread %}
+                        <span class="badge bg-danger">{{ user.notifications.count }}</span>
+                        {% endif %}
+                        {% endwith %}
+                    </a>
+                    <a class="btn btn-outline-light btn-sm mb-1" href="{% url 'accounts:logout' %}">Logout</a>
                 </div>
                 {% endif %}
             </div>
-            {% if user.is_authenticated %}
-                <a class="btn btn-outline-light btn-sm me-2 position-relative" href="{% url 'accounts:notifications' %}">
-                    Notifications
-                {% with unread=user.notifications.all %}
-                {% if unread %}
-                    <span class="badge bg-danger">{{ user.notifications.count }}</span>
-                {% endif %}
-                {% endwith %}
-            </a>
-        {% endif %}
-        </nav>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
         {% block content %}{% endblock %}
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
