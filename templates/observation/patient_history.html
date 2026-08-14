@@ -2,6 +2,17 @@
 {% block content %}
 <div class="container mt-4">
     <h3>Observation Timeline — {{ patient.full_name }}</h3>
+        <form
+            method="post"
+            action="{% url 'observation:patient_ai_analysis' patient.id %}"
+            class="mb-3"
+        >
+    {% csrf_token %}
+
+    <button type="submit" class="btn btn-primary">
+        Generate AI Analysis
+    </button>
+</form>
     <div class="timeline">
         {% for obs in observations %}
         <div class="card mb-2">

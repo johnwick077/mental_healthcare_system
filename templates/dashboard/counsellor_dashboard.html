@@ -23,6 +23,40 @@
 
     <a href="{% url 'observation:observation_add' %}" class="btn btn-primary mb-3">+ Record Observation</a>
     <a href="{% url 'inventory:request_add' %}" class="btn btn-outline-primary mb-3">+ Request Resources</a>
+    <h5 class="mt-3">Assigned Patients</h5>
+
+<div class="table-responsive-wrapper mb-4">
+    <table class="table table-bordered table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Patient</th>
+                <th>Observation History</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for patient in assigned_patients %}
+            <tr>
+                <td>{{ patient.full_name }}</td>
+                <td>
+                    <a
+                        href="{% url 'observation:patient_history' patient.id %}"
+                        class="btn btn-sm btn-outline-primary"
+                    >
+                        View Observation History
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center">
+                    No patients currently assigned.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
     <h5>Recent Observations</h5>
     <table class="table table-bordered">

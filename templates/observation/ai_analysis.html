@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3>AI Observation Analysis</h3>
+
+    <p>
+        <strong>Patient:</strong> {{ patient.full_name }}
+    </p>
+
+    {% if error %}
+
+        <div class="alert alert-warning">
+            {{ error }}
+        </div>
+
+    {% else %}
+
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <h5>Observation Summary</h5>
+
+                <p>
+                    {{ ai_summary.observation_summary }}
+                </p>
+
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <h5>Observed Changes</h5>
+
+                <ul>
+                    {% for change in ai_summary.observed_changes %}
+                        <li>{{ change }}</li>
+                    {% endfor %}
+                </ul>
+
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <h5>Evidence Interpretation</h5>
+
+                <p>
+                    {{ ai_summary.evidence_interpretation }}
+                </p>
+
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-body">
+
+                <h5>Recommended Follow-up</h5>
+
+                <p>
+                    {{ ai_summary.recommended_follow_up }}
+                </p>
+
+            </div>
+        </div>
+
+        <div class="alert alert-secondary">
+            <strong>Disclaimer:</strong>
+            {{ ai_summary.disclaimer }}
+        </div>
+
+    {% endif %}
+
+    <a
+        href="{% url 'observation:patient_history' patient.id %}"
+        class="btn btn-secondary"
+    >
+        Back to Observation History
+    </a>
+
+</div>
+
+{% endblock %}

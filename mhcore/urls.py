@@ -28,6 +28,14 @@ urlpatterns = [
     path('observations/', include('observation.urls')),
     path('inventory/', include('inventory.urls')),
     path('reports/', include('reports.urls')),
-    path('', lambda request: redirect('accounts:login')),
+    path('', lambda request: redirect(
+        'dashboard:admin_dashboard'
+        if request.user.is_authenticated and request.user.is_admin()
+        else 'dashboard:counsellor_dashboard'
+        if request.user.is_authenticated and request.user.is_counsellor()
+        else 'dashboard:store_dashboard'
+        if request.user.is_authenticated and request.user.is_store_manager()
+        else 'accounts:login'
+    )),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
