@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from patient.models import Patient
+from django.utils import timezone
 
 
 class DailyObservation(models.Model):
@@ -110,6 +111,16 @@ class DailyObservation(models.Model):
             return self.PRIORITY_HIGH
 
     def save(self, *args, **kwargs):
+    # Automatically record the observation date and time
+    # when a new observation is created.
+        if not self.date:
+            self.date = timezone.localdate()
+
+        if not self.time:
+            self.time = timezone.localtime().time()
+
+    # Calculate POI and priority automatically
         self.poi_score = self.calculate_poi()
         self.priority_level = self.get_priority_level(self.poi_score)
+
         super().save(*args, **kwargs)

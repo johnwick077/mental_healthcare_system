@@ -72,7 +72,159 @@
             <strong>Disclaimer:</strong>
             {{ ai_summary.disclaimer }}
         </div>
+        <div class="card mb-3">
+    <div class="card-body">
 
+        <details>
+            <summary class="fw-bold">
+                View Structured Analysis
+            </summary>
+
+            <div class="mt-3">
+
+                <h6>Observation Period</h6>
+
+                <p>
+                    <strong>Observation Count:</strong>
+                    {{ summary_data.observation_period.observation_count }}
+                </p>
+
+                <hr>
+
+                <h6>Matched Pattern</h6>
+
+                <p>
+                    <strong>Name:</strong>
+                    {{ summary_data.matched_pattern.name }}
+                </p>
+
+                <p>
+                    <strong>Description:</strong>
+                    {{ summary_data.matched_pattern.description }}
+                </p>
+
+                <p>
+                    <strong>Minimum Days:</strong>
+                    {{ summary_data.matched_pattern.minimum_days }}
+                </p>
+
+                <p>
+                    <strong>Minimum Occurrences:</strong>
+                    {{ summary_data.matched_pattern.minimum_occurrences }}
+                </p>
+
+                <hr>
+
+                <h6>Trends</h6>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Observation Field</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for field, trend in summary_data.analysis.trends.items %}
+                                {% if field != 'status' and field != 'observation_count' %}
+                                <tr>
+                                    <td>{{ field|title }}</td>
+                                    <td>{{ trend }}</td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <hr>
+
+                <h6>Matched Fields</h6>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Field</th>
+                                <th>Expected Value</th>
+                                <th>Occurrences</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for field, details in summary_data.analysis.matched_fields.items %}
+                            <tr>
+                                <td>{{ field|title }}</td>
+                                <td>{{ details.expected_value }}</td>
+                                <td>{{ details.occurrences }}</td>
+                            </tr>
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <hr>
+
+                <h6>Supporting Research Evidence</h6>
+
+                {% for paper in summary_data.research_evidence %}
+
+                    <div class="border rounded p-3 mb-2">
+
+                        <strong>{{ paper.title }}</strong>
+
+                        <p class="mb-1">
+                            <strong>Authors:</strong>
+                            {{ paper.authors }}
+                        </p>
+
+                        <p class="mb-1">
+                            <strong>Journal:</strong>
+                            {{ paper.journal }}
+                        </p>
+
+                        <p class="mb-1">
+                            <strong>Publication Year:</strong>
+                            {{ paper.publication_year }}
+                        </p>
+
+                        <p class="mb-1">
+                            <strong>Source:</strong>
+                            {{ paper.source }}
+                        </p>
+
+                        <p class="mb-1">
+                            <strong>Verified:</strong>
+                            {{ paper.verified }}
+                        </p>
+
+                    </div>
+
+                {% empty %}
+
+                    <p class="text-muted">
+                        No verified supporting research evidence is linked
+                        to this matched pattern.
+                    </p>
+
+                {% endfor %}
+
+            </div>
+
+        </details>
+
+    </div>
+</div>
     {% endif %}
 
     <a

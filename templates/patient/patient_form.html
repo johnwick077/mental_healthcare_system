@@ -1,18 +1,101 @@
 {% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Edit Patient{% else %}Add Patient{% endif %} | MHCore
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4" style="max-width: 600px;">
-    <h3>{% if object %}Edit{% else %}Add{% endif %} Patient</h3>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+
+<div class="container app-page">
+
+    <div class="form-panel">
+
+        <div class="form-panel-header">
+
+            <h2>
+                {% if object %}
+                    Edit Patient
+                {% else %}
+                    Add Patient
+                {% endif %}
+            </h2>
+
+            <p>
+                {% if object %}
+                    Update the patient's registered information.
+                {% else %}
+                    Register a new patient in the rehabilitation centre.
+                {% endif %}
+            </p>
+
         </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a href="{% url 'patient:patient_list' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+
+
+        <form method="post" enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+
+            {% for field in form %}
+
+                <div class="form-group-app">
+
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small class="text-muted d-block mt-1">
+                            {{ field.help_text }}
+                        </small>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="form-error-app">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+
+            <div class="form-actions-app">
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    {% if object %}
+                        Save Changes
+                    {% else %}
+                        Add Patient
+                    {% endif %}
+                </button>
+
+                <a
+                    href="{% url 'patient:patient_list' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
 </div>
+
 {% endblock %}

@@ -1,85 +1,414 @@
 {% extends 'base.html' %}
+
+{% block title %}
+    Admin Dashboard | MHCore
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h3>Admin Dashboard</h3>
+
+<div class="container-fluid app-page">
+
     <div class="mb-4">
-        <a href="{% url 'accounts:user_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Users</a>
-        <a href="{% url 'patient:patient_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Patients</a>
-        <a href="{% url 'patient:ward_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Wards</a>
-        <a href="{% url 'inventory:inventory_list' %}" class="btn btn-outline-dark btn-sm me-2">Manage Inventory</a>
-        <a href="{% url 'inventory:pending_requests' %}" class="btn btn-outline-dark btn-sm">Pending Requests</a>
+
+        <h2 class="mb-1">
+            Admin Dashboard
+        </h2>
+
+        <p class="text-muted mb-0">
+            Overview of rehabilitation centre operations.
+        </p>
+
     </div>
-    <div class="mb-4">
-    <h6>Reports</h6>
-    <a href="{% url 'reports:daily_report' %}" class="btn btn-outline-secondary btn-sm me-2">Daily Report</a>
-    <a href="{% url 'reports:weekly_report' %}" class="btn btn-outline-secondary btn-sm me-2">Weekly Report</a>
-    <a href="{% url 'reports:monthly_report' %}" class="btn btn-outline-secondary btn-sm me-2">Monthly Report</a>
-    <a href="{% url 'reports:inventory_report' %}" class="btn btn-outline-secondary btn-sm me-2">Inventory Report</a>
-    <a href="{% url 'reports:resource_usage_report' %}" class="btn btn-outline-secondary btn-sm">Resource Usage Report</a>
-    </div>
+
+
+    <!-- =====================================================
+         OVERVIEW
+    ====================================================== -->
+
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card text-center p-3">
-                <h5>{{ total_patients }}</h5><p class="mb-0 text-muted">Total Patients</p>
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="card h-100 p-3">
+
+                <small class="text-muted">
+                    Active Patients
+                </small>
+
+                <div class="fs-3 fw-semibold mt-1">
+                    {{ total_patients }}
+                </div>
+
             </div>
+
         </div>
-        <div class="col-md-3">
-            <div class="card text-center p-3">
-                <h5>{{ total_counsellors }}</h5><p class="mb-0 text-muted">Counsellors</p>
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="card h-100 p-3">
+
+                <small class="text-muted">
+                    Counsellors
+                </small>
+
+                <div class="fs-3 fw-semibold mt-1">
+                    {{ total_counsellors }}
+                </div>
+
             </div>
+
         </div>
-        <div class="col-md-3">
-            <div class="card text-center p-3">
-                <h5>{{ todays_observations }}</h5><p class="mb-0 text-muted">Today's Observations</p>
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="card h-100 p-3">
+
+                <small class="text-muted">
+                    Today's Observations
+                </small>
+
+                <div class="fs-3 fw-semibold mt-1">
+                    {{ todays_observations }}
+                </div>
+
             </div>
+
         </div>
-        <div class="col-md-3">
-            <div class="card text-center p-3">
-                <h5>{{ pending_requests }}</h5><p class="mb-0 text-muted">Pending Requests</p>
+
+
+        <div class="col-12 col-sm-6 col-xl-3">
+
+            <div class="card h-100 p-3">
+
+                <small class="text-muted">
+                    Pending Requests
+                </small>
+
+                <div class="fs-3 fw-semibold mt-1">
+                    {{ pending_requests }}
+                </div>
+
             </div>
+
         </div>
+
     </div>
+
+
+    <!-- =====================================================
+         ALERTS
+    ====================================================== -->
 
     {% if low_stock_count > 0 %}
-    <div class="alert alert-warning">⚠ {{ low_stock_count }} item(s) are running low on stock.</div>
+
+        <div class="alert alert-warning">
+
+            <strong>Low stock:</strong>
+
+            {{ low_stock_count }}
+            item{{ low_stock_count|pluralize }}
+            {{ low_stock_count|pluralize:"is,are" }}
+            running low.
+
+        </div>
+
     {% endif %}
 
-    <div class="row g-4">
-        <div class="col-md-6">
-            <h6>Observation Trend (Last 7 Days)</h6>
-            <canvas id="trendChart"></canvas>
+
+    <!-- =====================================================
+         CHARTS
+    ====================================================== -->
+
+    <div class="row g-4 mb-4">
+
+        <div class="col-12 col-lg-7">
+
+            <div class="card h-100">
+
+                <div class="card-header">
+
+                    <strong>
+                        Observation Activity
+                    </strong>
+
+                    <div class="small text-muted">
+                        Last 7 days
+                    </div>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div style="height: 280px;">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
-        <div class="col-md-6">
-            <h6>Today's Patient Priority Levels</h6>
-            <canvas id="priorityChart"></canvas>
+
+
+        <div class="col-12 col-lg-5">
+
+            <div class="card h-100">
+
+                <div class="card-header">
+
+                    <strong>
+                        Today's Priority
+                    </strong>
+
+                    <div class="small text-muted">
+                        Observation priority distribution
+                    </div>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div style="height: 280px;">
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
+
     </div>
+
+
+    <!-- =====================================================
+         REPORTS
+    ====================================================== -->
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <strong>
+                Reports
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-2">
+
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+
+                    <a
+                        href="{% url 'reports:daily_report' %}"
+                        class="btn btn-outline-primary w-100"
+                    >
+                        Daily Report
+                    </a>
+
+                </div>
+
+
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+
+                    <a
+                        href="{% url 'reports:weekly_report' %}"
+                        class="btn btn-outline-primary w-100"
+                    >
+                        Weekly Report
+                    </a>
+
+                </div>
+
+
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+
+                    <a
+                        href="{% url 'reports:monthly_report' %}"
+                        class="btn btn-outline-primary w-100"
+                    >
+                        Monthly Report
+                    </a>
+
+                </div>
+
+
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+
+                    <a
+                        href="{% url 'reports:inventory_report' %}"
+                        class="btn btn-outline-primary w-100"
+                    >
+                        Inventory Report
+                    </a>
+
+                </div>
+
+
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+
+                    <a
+                        href="{% url 'reports:resource_usage_report' %}"
+                        class="btn btn-outline-primary w-100"
+                    >
+                        Resource Usage
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-new Chart(document.getElementById('trendChart'), {
-    type: 'line',
-    data: {
-        labels: {{ trend_labels|safe }},
-        datasets: [{
-            label: 'Observations',
-            data: {{ trend_counts|safe }},
-            borderColor: '#0d6efd',
-            tension: 0.3
-        }]
-    }
-});
 
-new Chart(document.getElementById('priorityChart'), {
-    type: 'doughnut',
-    data: {
-        labels: {{ priority_labels|safe }},
-        datasets: [{
-            data: {{ priority_counts|safe }},
-            backgroundColor: ['#198754', '#ffc107', '#fd7e14', '#dc3545']
-        }]
-    }
-});
+<!-- =========================================================
+     CHART.JS
+========================================================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+(function () {
+
+    const rootStyles =
+        getComputedStyle(document.documentElement);
+
+    const textColor =
+        rootStyles.getPropertyValue('--text').trim();
+
+    const mutedColor =
+        rootStyles.getPropertyValue('--text-muted').trim();
+
+    const borderColor =
+        rootStyles.getPropertyValue('--border').trim();
+
+
+    /* Observation trend */
+
+    new Chart(
+        document.getElementById('trendChart'),
+        {
+            type: 'line',
+
+            data: {
+                labels: {{ trend_labels|safe }},
+
+                datasets: [{
+                    label: 'Observations',
+
+                    data: {{ trend_counts|safe }},
+
+                    borderColor:
+                        rootStyles
+                            .getPropertyValue('--accent')
+                            .trim(),
+
+                    backgroundColor:
+                        'transparent',
+
+                    tension: 0.25,
+
+                    pointRadius: 3
+                }]
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor
+                        }
+                    }
+                },
+
+                scales: {
+
+                    x: {
+                        ticks: {
+                            color: mutedColor
+                        },
+
+                        grid: {
+                            color: borderColor
+                        }
+                    },
+
+                    y: {
+                        beginAtZero: true,
+
+                        ticks: {
+                            color: mutedColor
+                        },
+
+                        grid: {
+                            color: borderColor
+                        }
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+
+    /* Priority distribution */
+
+    new Chart(
+        document.getElementById('priorityChart'),
+        {
+            type: 'doughnut',
+
+            data: {
+                labels: {{ priority_labels|safe }},
+
+                datasets: [{
+                    data: {{ priority_counts|safe }}
+                }]
+            },
+
+            options: {
+
+                responsive: true,
+
+                maintainAspectRatio: false,
+
+                plugins: {
+
+                    legend: {
+
+                        position: 'bottom',
+
+                        labels: {
+                            color: textColor
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+})();
+
 </script>
+
 {% endblock %}

@@ -1,17 +1,101 @@
 {% extends 'base.html' %}
+
+{% block title %}Record Observation | MHCore{% endblock %}
+
 {% block content %}
-<div class="container mt-4" style="max-width: 650px;">
-    <h3>Record Daily Observation</h3>
-    <form method="post">
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="mb-3">
-            <label class="form-label">{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+
+<div class="container app-page">
+
+    <div class="form-panel">
+
+        <div class="form-panel-header">
+
+            <h2>Record Daily Observation</h2>
+
+            <p>
+                Record the patient's observed condition
+                for the current observation period.
+            </p>
+
         </div>
-        {% endfor %}
-        <button type="submit" class="btn btn-primary">Save Observation</button>
-    </form>
+
+
+        <div class="auto-time-notice">
+
+            <div>
+                <strong>Time recorded automatically</strong>
+
+                <div>
+                    The current date and time will be recorded
+                    automatically when this observation is saved.
+                </div>
+            </div>
+
+        </div>
+
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {% for field in form %}
+
+                <div class="form-group-app">
+
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small class="text-muted">
+                            {{ field.help_text }}
+                        </small>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="form-error-app">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            {% endfor %}
+
+
+            {% if form.non_field_errors %}
+
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+
+            {% endif %}
+
+
+            <div class="form-actions-app">
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Save Observation
+                </button>
+
+                <a
+                    href="{% url 'observation:observation_list' %}"
+                    class="btn btn-outline-secondary"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
 </div>
+
 {% endblock %}

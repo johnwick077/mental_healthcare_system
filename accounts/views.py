@@ -9,7 +9,7 @@ from django.views.generic import ListView, CreateView, UpdateView
 from django.utils.decorators import method_decorator
 from .decorators import role_required
 from .models import User
-from .forms import AdminUserCreateForm, AdminUserEditForm
+from .forms import AdminUserCreateForm, AdminUserEditForm, ProfileUpdateForm
 from .models import Notification
 
 
@@ -60,7 +60,18 @@ class RoleBasedLoginView(LoginView):
             return reverse_lazy('dashboard:store_dashboard')
         return reverse_lazy('accounts:login')
 
+class ProfileView(LoginRequiredMixin, UpdateView):
+    model = User
+    form_class = ProfileUpdateForm
+    template_name = 'accounts/profile.html'
+    context_object_name = 'profile_user'
 
+    def get_object(self, queryset=None):
+        return self.request.user
+
+    def get_success_url(self):
+        return reverse_lazy('accounts:profile')
+    
 def logout_view(request):
     logout(request)
     return redirect('accounts:login')

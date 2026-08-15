@@ -8,7 +8,6 @@ media/
 *.log
 .vscode/
 staticfiles/
-static/
 templates/dashboard/landing.html
 observation/ai_utils.py
 patient/management/
