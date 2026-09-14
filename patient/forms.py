@@ -6,21 +6,85 @@ class PatientForm(forms.ModelForm):
     class Meta:
         model = Patient
         fields = [
-            'full_name', 'age', 'gender', 'guardian_name', 'guardian_contact',
-            'ward', 'assigned_counsellor', 'photo', 'notes'
+            'full_name',
+            'age',
+            'gender',
+            'guardian_name',
+            'guardian_contact',
+            'ward',
+            'assigned_counsellor',
+            'photo',
+            'care_focus',
+            'observation_focus',
+            'baseline_notes',
+            'notes',
         ]
-        widgets = {
-            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'age': forms.NumberInput(attrs={'class': 'form-control'}),
-            'gender': forms.Select(attrs={'class': 'form-select'}),
-            'guardian_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'guardian_contact': forms.TextInput(attrs={'class': 'form-control'}),
-            'ward': forms.Select(attrs={'class': 'form-select'}),
-            'assigned_counsellor': forms.Select(attrs={'class': 'form-select'}),
-            'photo': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
 
+        widgets = {
+            'full_name': forms.TextInput(
+                attrs={'class': 'form-control'}
+            ),
+
+            'age': forms.NumberInput(
+                attrs={'class': 'form-control'}
+            ),
+
+            'gender': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+
+            'guardian_name': forms.TextInput(
+                attrs={'class': 'form-control'}
+            ),
+
+            'guardian_contact': forms.TextInput(
+                attrs={'class': 'form-control'}
+            ),
+
+            'ward': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+
+            'assigned_counsellor': forms.Select(
+                attrs={'class': 'form-select'}
+            ),
+
+            'photo': forms.ClearableFileInput(
+                attrs={'class': 'form-control'}
+            ),
+
+            'care_focus': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Enter relevant care or observation focus...'
+                }
+            ),
+
+            'observation_focus': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'What behaviours or factors should be observed?'
+                }
+            ),
+
+            'baseline_notes': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'Describe the patient’s usual baseline behaviour or routine...'
+                }
+            ),
+
+            'notes': forms.Textarea(
+                attrs={
+                    'class': 'form-control',
+                    'rows': 3,
+                    'placeholder': 'General notes...'
+                }
+            ),
+        }
 
 class WardForm(forms.ModelForm):
     class Meta:

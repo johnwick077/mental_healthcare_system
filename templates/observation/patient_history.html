@@ -1,32 +1,374 @@
 {% extends 'base.html' %}
+
+{% block title %}Observation History | MHCore{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h3>Observation Timeline — {{ patient.full_name }}</h3>
+
+<div class="container app-page">
+
+    <!-- Page Header -->
+
+    <div class="page-header mb-4">
+
+        <div>
+            <h2>Observation History</h2>
+
+            <p class="text-muted mb-0">
+                {{ patient.full_name }} — longitudinal observation record
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- Today's Observation Progress -->
+
+    <div class="form-panel mb-4">
+
+        <div class="form-panel-header">
+
+            <h4>Today's Observation Progress</h4>
+
+            <p>
+                Minimum required observations per patient per day:
+                {{ minimum_daily_observations }}
+            </p>
+
+        </div>
+
+
+        <div class="row align-items-center">
+
+            <div class="col-md-4">
+
+                <div class="observation-progress-number">
+
+                    {{ todays_observation_count }}
+                    /
+                    {{ minimum_daily_observations }}
+
+                </div>
+
+                <div class="text-muted">
+                    Observations recorded today
+                </div>
+
+            </div>
+
+
+            <div class="col-md-8">
+
+                {% if daily_target_completed %}
+
+                    <div class="alert alert-success mb-0">
+
+                        <strong>Daily target completed.</strong>
+
+                        Minimum observation coverage has been
+                        completed for today.
+
+                    </div>
+
+                {% else %}
+
+                    <div class="alert alert-warning mb-0">
+
+                        <strong>
+                            {{ todays_remaining }}
+                            observation{{ todays_remaining|pluralize }}
+                            remaining.
+                        </strong>
+
+                        Continue recording observations for today's
+                        minimum coverage.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- AI Analysis -->
+
+    <div class="mb-4">
+
         <form
             method="post"
             action="{% url 'observation:patient_ai_analysis' patient.id %}"
-            class="mb-3"
         >
-    {% csrf_token %}
 
-    <button type="submit" class="btn btn-primary">
-        Generate AI Analysis
-    </button>
-</form>
-    <div class="timeline">
-        {% for obs in observations %}
-        <div class="card mb-2">
-            <div class="card-body">
-                <h6 class="card-title">{{ obs.date }} at {{ obs.time }}</h6>
-                <p class="mb-1"><strong>Mood:</strong> {{ obs.get_mood_display }} | <strong>Behaviour:</strong> {{ obs.get_behaviour_display }}</p>
-                <p class="mb-1"><strong>Sleep:</strong> {{ obs.get_sleep_quality_display }} | <strong>Appetite:</strong> {{ obs.get_appetite_display }} | <strong>Hygiene:</strong> {{ obs.get_personal_hygiene_display }}</p>
-                <p class="mb-1"><strong>POI Score:</strong> {{ obs.poi_score }} — {{ obs.get_priority_level_display }}</p>
-                {% if obs.remarks %}<p class="text-muted small mb-0">{{ obs.remarks }}</p>{% endif %}
-            </div>
-        </div>
-        {% empty %}
-        <p>No observations recorded for this patient yet.</p>
-        {% endfor %}
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Generate AI Analysis
+            </button>
+
+        </form>
+
     </div>
+
+
+    <!-- Observation Timeline -->
+
+    <div class="form-panel">
+
+        <div class="form-panel-header">
+
+            <h4>Observation Timeline</h4>
+
+            <p>
+                Each entry represents one observation session.
+            </p>
+
+        </div>
+
+
+        <div class="timeline">
+
+            {% for obs in observations %}
+
+                <div class="card mb-3">
+
+                    <div class="card-body">
+
+
+                        <!-- Date and Time -->
+
+                        <div class="d-flex justify-content-between
+                                    align-items-start flex-wrap mb-3">
+
+                            <div>
+
+                                <h5 class="mb-1">
+
+                                    {{ obs.date }}
+
+                                </h5>
+
+                                <div class="text-muted">
+
+                                    Observation time:
+                                    {{ obs.time }}
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="mt-2 mt-md-0">
+
+                                <strong>
+                                    POI: {{ obs.poi_score }}
+                                </strong>
+
+                                <span class="ms-2">
+                                    {{ obs.get_priority_level_display }}
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Observation Factors -->
+
+                        <div class="row g-3">
+
+
+                            <div class="col-md-6">
+
+                                <strong>Mood</strong>
+
+                                <div>
+                                    {{ obs.get_mood_display }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <strong>Behaviour</strong>
+
+                                <div>
+                                    {{ obs.get_behaviour_display }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <strong>Sleep</strong>
+
+                                <div>
+                                    {{ obs.get_sleep_quality_display }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <strong>Appetite</strong>
+
+                                <div>
+                                    {{ obs.get_appetite_display }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <strong>Personal Hygiene</strong>
+
+                                <div>
+                                    {{ obs.get_personal_hygiene_display }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <strong>Communication</strong>
+
+                                <div>
+                                    {{ obs.get_communication_display }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <strong>Participation</strong>
+
+                                <div>
+                                    {{ obs.get_participation_display }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <strong>Recorded By</strong>
+
+                                <div>
+                                    {{ obs.counsellor|default:"—" }}
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Remarks -->
+
+                        {% if obs.remarks %}
+
+                            <div class="mt-3 pt-3 border-top">
+
+                                <strong>Remarks</strong>
+
+                                <p class="mb-0 mt-1">
+                                    {{ obs.remarks }}
+                                </p>
+
+                            </div>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </div>
+
+
+            {% empty %}
+
+                <div class="text-center py-4">
+
+                    <p class="text-muted mb-0">
+                        No observations recorded for this patient yet.
+                    </p>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Pagination -->
+
+    {% if is_paginated %}
+
+        <nav class="mt-4">
+
+            <ul class="pagination">
+
+                {% if page_obj.has_previous %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}"
+                        >
+                            Previous
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+
+                <li class="page-item active">
+
+                    <span class="page-link">
+
+                        Page {{ page_obj.number }}
+                        of {{ page_obj.paginator.num_pages }}
+
+                    </span>
+
+                </li>
+
+
+                {% if page_obj.has_next %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?page={{ page_obj.next_page_number }}"
+                        >
+                            Next
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+        </nav>
+
+    {% endif %}
+
 </div>
+
 {% endblock %}

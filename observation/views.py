@@ -13,6 +13,7 @@ from evidence.pattern_matcher import find_matching_patterns, analyze_pattern_mat
 from evidence.evidence_retriever import get_evidence_for_pattern
 from evidence.summary_builder import build_summary_data
 from evidence.ai_summarizer import generate_evidence_summary
+from django.utils import timezone
 
 
 @method_decorator(role_required('COUNSELLOR'), name='dispatch')
@@ -59,31 +60,126 @@ class ObservationListView(LoginRequiredMixin, ListView):
 
 class PatientObservationHistoryView(LoginRequiredMixin, ListView):
     """
-    Full observation timeline for a single patient (used on patient detail page).
+    Full observation timeline for a single patient.
+
+    Admins can view all patients.
+    Counsellors can view only patients assigned to them.
     """
+
     model = DailyObservation
     template_name = 'observation/patient_history.html'
     context_object_name = 'observations'
     paginate_by = 15
 
     def get_queryset(self):
-        self.patient = Patient.objects.get(pk=self.kwargs['patient_id'])
-        return DailyObservation.objects.filter(patient=self.patient)
+
+        patient_id = self.kwargs['patient_id']
+
+        # Admin can access all patients
+        if self.request.user.role == 'ADMIN':
+
+            self.patient = Patient.objects.get(
+                pk=patient_id
+            )
+
+        # Counsellor can access only assigned patients
+        elif self.request.user.role == 'COUNSELLOR':
+
+            self.patient = Patient.objects.filter(
+                pk=patient_id,
+                assigned_counsellor__user=self.request.user,
+                is_active=True
+            ).first()
+
+            if not self.patient:
+                from django.http import Http404
+                raise Http404(
+                    "You are not authorized to view this patient's history."
+                )
+
+        else:
+
+            from django.http import Http404
+            raise Http404(
+                "You are not authorized to view this patient's history."
+            )
+
+        return DailyObservation.objects.filter(
+            patient=self.patient
+        ).select_related(
+            'patient',
+            'counsellor'
+        )
 
     def get_context_data(self, **kwargs):
+
         context = super().get_context_data(**kwargs)
+
         context['patient'] = self.patient
+
+        today = timezone.localdate()
+
+        todays_count = DailyObservation.objects.filter(
+            patient=self.patient,
+            date=today
+        ).count()
+
+        minimum_daily_observations = 3
+
+        context['todays_observation_count'] = todays_count
+
+        context['minimum_daily_observations'] = (
+            minimum_daily_observations
+        )
+
+        context['todays_remaining'] = max(
+            0,
+            minimum_daily_observations - todays_count
+        )
+
+        context['daily_target_completed'] = (
+            todays_count >= minimum_daily_observations
+        )
+
         return context
 
 
 class PatientAIAnalysisView(LoginRequiredMixin, View):
     """
     Generate an evidence-grounded AI summary
-    for a patient's recent observations.
+    for an authorized patient's recent observations.
     """
 
     def post(self, request, patient_id):
-        patient = Patient.objects.get(pk=patient_id)
+
+        # Admin can access all patients
+        if request.user.role == 'ADMIN':
+
+            patient = Patient.objects.filter(
+                pk=patient_id
+            ).first()
+
+        # Counsellor can access only assigned active patients
+        elif request.user.role == 'COUNSELLOR':
+
+            patient = Patient.objects.filter(
+                pk=patient_id,
+                assigned_counsellor__user=request.user,
+                is_active=True
+            ).first()
+
+        else:
+
+            patient = None
+
+        if not patient:
+
+            from django.http import Http404
+
+            raise Http404(
+                "You are not authorized to analyse this patient."
+            )
+
 
         observations = list(
             get_patient_observations(
@@ -92,40 +188,55 @@ class PatientAIAnalysisView(LoginRequiredMixin, View):
             )
         )
 
+
         if not observations:
+
             return render(
                 request,
                 'observation/ai_analysis.html',
                 {
                     'patient': patient,
-                    'error': 'No recent observations are available for analysis.',
+                    'error': (
+                        'No recent observations are available '
+                        'for analysis.'
+                    ),
                 }
             )
+
 
         matched_patterns = find_matching_patterns(
             observations
         )
 
+
         if not matched_patterns:
+
             return render(
                 request,
                 'observation/ai_analysis.html',
                 {
                     'patient': patient,
-                    'error': 'No observation pattern matched the recent observations.',
+                    'error': (
+                        'No observation pattern matched '
+                        'the recent observations.'
+                    ),
                 }
             )
 
+
         pattern = matched_patterns[0]
+
 
         pattern_result = analyze_pattern_match(
             pattern,
             observations
         )
 
+
         research_evidence = get_evidence_for_pattern(
             pattern
         )
+
 
         summary_data = build_summary_data(
             observations,
@@ -133,9 +244,11 @@ class PatientAIAnalysisView(LoginRequiredMixin, View):
             research_evidence
         )
 
+
         ai_summary = generate_evidence_summary(
             summary_data
         )
+
 
         return render(
             request,

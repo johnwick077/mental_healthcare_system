@@ -1,17 +1,160 @@
 {% extends 'base.html' %}
-{% block content %}
-<div class="container mt-4">
-    <h3>{{ patient.full_name }}</h3>
-    <table class="table table-bordered w-50">
-        <tr><th>Age</th><td>{{ patient.age }}</td></tr>
-        <tr><th>Gender</th><td>{{ patient.get_gender_display }}</td></tr>
-        <tr><th>Ward</th><td>{{ patient.ward.name|default:"—" }}</td></tr>
-        <tr><th>Assigned Counsellor</th><td>{{ patient.assigned_counsellor|default:"Unassigned" }}</td></tr>
-        <tr><th>Guardian</th><td>{{ patient.guardian_name }} ({{ patient.guardian_contact }})</td></tr>
-        <tr><th>Admission Date</th><td>{{ patient.admission_date }}</td></tr>
-    </table>
 
-    <a href="{% url 'observation:patient_history' patient.pk %}" class="btn btn-outline-primary mt-3">View Observation History</a>
-    <a href="{% url 'reports:patient_progress_report' patient.pk %}" class="btn btn-outline-success mt-3 ms-2">Download Progress Report (PDF)</a>
+{% block title %}Patient Profile | MHCore{% endblock %}
+
+{% block content %}
+
+<div class="container app-page">
+
+    <div class="page-header mb-4">
+        <div>
+            <h2>{{ patient.full_name }}</h2>
+            <p class="text-muted mb-0">
+                Patient profile and observation context
+            </p>
+        </div>
+    </div>
+
+
+    <!-- Basic Information -->
+
+    <div class="form-panel mb-4">
+
+        <div class="form-panel-header">
+            <h4>Basic Information</h4>
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <strong>Age</strong>
+                <div>{{ patient.age }}</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Gender</strong>
+                <div>{{ patient.get_gender_display }}</div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Ward</strong>
+                <div>
+                    {{ patient.ward.name|default:"—" }}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Assigned Counsellor</strong>
+                <div>
+                    {{ patient.assigned_counsellor|default:"Unassigned" }}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Guardian</strong>
+                <div>
+                    {{ patient.guardian_name|default:"—" }}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Guardian Contact</strong>
+                <div>
+                    {{ patient.guardian_contact|default:"—" }}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <strong>Admission Date</strong>
+                <div>{{ patient.admission_date }}</div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Observation Context -->
+
+    <div class="form-panel mb-4">
+
+        <div class="form-panel-header">
+            <h4>Observation Context</h4>
+
+            <p>
+                Information provided by authorised staff to help
+                counsellors understand the patient's usual context.
+            </p>
+        </div>
+
+        <div class="mb-4">
+            <strong>Care Focus</strong>
+
+            <p class="mt-2 mb-0">
+                {{ patient.care_focus|default:"No care focus recorded." }}
+            </p>
+        </div>
+
+
+        <div class="mb-4">
+            <strong>Observation Focus</strong>
+
+            <p class="mt-2 mb-0">
+                {{ patient.observation_focus|default:"No specific observation focus recorded." }}
+            </p>
+        </div>
+
+
+        <div>
+            <strong>Baseline Notes</strong>
+
+            <p class="mt-2 mb-0">
+                {{ patient.baseline_notes|default:"No baseline notes recorded." }}
+            </p>
+        </div>
+
+    </div>
+
+
+    <!-- General Notes -->
+
+    {% if patient.notes %}
+
+    <div class="form-panel mb-4">
+
+        <div class="form-panel-header">
+            <h4>General Notes</h4>
+        </div>
+
+        <p class="mb-0">
+            {{ patient.notes }}
+        </p>
+
+    </div>
+
+    {% endif %}
+
+
+    <!-- Actions -->
+
+    <div class="d-flex flex-wrap gap-2">
+
+        <a
+            href="{% url 'observation:patient_history' patient.pk %}"
+            class="btn btn-outline-primary"
+        >
+            View Observation History
+        </a>
+
+        <a
+            href="{% url 'reports:patient_progress_report' patient.pk %}"
+            class="btn btn-outline-success"
+        >
+            Download Progress Report
+        </a>
+
+    </div>
+
 </div>
+
 {% endblock %}

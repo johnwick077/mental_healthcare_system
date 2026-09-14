@@ -35,8 +35,12 @@ class Counsellor(models.Model):
 
 class Patient(models.Model):
     """
-    Core patient record. Registration only — no diagnosis fields.
+    Core patient record.
+
+    Stores patient registration and observation-context information.
+    This system does not make or store automated diagnoses.
     """
+
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
@@ -46,19 +50,55 @@ class Patient(models.Model):
     full_name = models.CharField(max_length=150)
     age = models.PositiveIntegerField()
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
+
     guardian_name = models.CharField(max_length=150, blank=True)
     guardian_contact = models.CharField(max_length=15, blank=True)
+
     admission_date = models.DateField(auto_now_add=True)
+
     ward = models.ForeignKey(
-        Ward, on_delete=models.SET_NULL, null=True, related_name='patients'
-    )
-    assigned_counsellor = models.ForeignKey(
-        Counsellor, on_delete=models.SET_NULL, null=True, blank=True,
+        Ward,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='patients'
     )
+
+    assigned_counsellor = models.ForeignKey(
+        Counsellor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='patients'
+    )
+
     is_active = models.BooleanField(default=True)
-    photo = models.ImageField(upload_to='patient_photos/', blank=True, null=True)
-    notes = models.TextField(blank=True, help_text="General notes only — not a diagnosis")
+
+    photo = models.ImageField(
+        upload_to='patient_photos/',
+        blank=True,
+        null=True
+    )
+
+    notes = models.TextField(
+        blank=True,
+        help_text="General notes only — not a diagnosis"
+    )
+
+    care_focus = models.TextField(
+        blank=True,
+        help_text="Relevant care or observation focus for this patient."
+    )
+
+    observation_focus = models.TextField(
+        blank=True,
+        help_text="Specific behaviours or factors counsellors should observe."
+    )
+
+    baseline_notes = models.TextField(
+        blank=True,
+        help_text="Known baseline behaviour or routine used for comparison."
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

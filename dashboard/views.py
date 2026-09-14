@@ -18,33 +18,70 @@ class AdminDashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         today = timezone.now().date()
 
-        context['total_patients'] = Patient.objects.filter(is_active=True).count()
-        context['total_counsellors'] = User.objects.filter(role='COUNSELLOR').count()
-        context['todays_observations'] = DailyObservation.objects.filter(date=today).count()
-        context['pending_requests'] = ResourceRequest.objects.filter(status='PENDING').count()
+        context['total_patients'] = Patient.objects.filter(
+            is_active=True
+        ).count()
+
+        context['total_counsellors'] = User.objects.filter(
+            role='COUNSELLOR'
+        ).count()
+
+        context['todays_observations'] = DailyObservation.objects.filter(
+            date=today
+        ).count()
+
+        context['pending_requests'] = ResourceRequest.objects.filter(
+            status='PENDING'
+        ).count()
+
         context['low_stock_items'] = Inventory.objects.filter(
-            quantity_in_stock__lte=10  # simplified; refined below with is_low_stock loop
+            quantity_in_stock__lte=10
         )
-        context['low_stock_count'] = sum(1 for inv in Inventory.objects.all() if inv.is_low_stock())
+
+        context['low_stock_count'] = sum(
+            1 for inv in Inventory.objects.all()
+            if inv.is_low_stock()
+        )
 
         # Chart data: last 7 days observation count trend
         from datetime import timedelta
-        last_7_days = [today - timedelta(days=i) for i in range(6, -1, -1)]
-        trend_labels = [d.strftime('%b %d') for d in last_7_days]
-        trend_counts = [
-            DailyObservation.objects.filter(date=d).count() for d in last_7_days
+
+        last_7_days = [
+            today - timedelta(days=i)
+            for i in range(6, -1, -1)
         ]
+
+        trend_labels = [
+            d.strftime('%b %d')
+            for d in last_7_days
+        ]
+
+        trend_counts = [
+            DailyObservation.objects.filter(date=d).count()
+            for d in last_7_days
+        ]
+
         context['trend_labels'] = trend_labels
         context['trend_counts'] = trend_counts
 
-        # Chart data: priority level distribution (today)
+        # Chart data: priority level distribution for today
         priority_counts = {}
+
         for choice_val, choice_label in DailyObservation.PRIORITY_CHOICES:
-            priority_counts[choice_label] = DailyObservation.objects.filter(
-                date=today, priority_level=choice_val
-            ).count()
-        context['priority_labels'] = list(priority_counts.keys())
-        context['priority_counts'] = list(priority_counts.values())
+            priority_counts[choice_label] = (
+                DailyObservation.objects.filter(
+                    date=today,
+                    priority_level=choice_val
+                ).count()
+            )
+
+        context['priority_labels'] = list(
+            priority_counts.keys()
+        )
+
+        context['priority_counts'] = list(
+            priority_counts.values()
+        )
 
         return context
 
@@ -55,22 +92,78 @@ class CounsellorDashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         user = self.request.user
         today = timezone.now().date()
 
+        # Get only active patients assigned to this counsellor
         assigned_patients = Patient.objects.none()
-        if hasattr(user, 'counsellor_profile'):
-            assigned_patients = user.counsellor_profile.patients.filter(is_active=True)
 
+        if hasattr(user, 'counsellor_profile'):
+            assigned_patients = (
+                user.counsellor_profile.patients.filter(
+                    is_active=True
+                )
+            )
+
+        # Number of assigned patients
         context['assigned_patients'] = assigned_patients
         context['assigned_patients_count'] = assigned_patients.count()
-        context['todays_observations'] = DailyObservation.objects.filter(
-            counsellor=user, date=today
+
+        # Total observations recorded by this counsellor today
+        todays_observations = DailyObservation.objects.filter(
+            counsellor=user,
+            date=today
         ).count()
-        context['pending_observations'] = assigned_patients.count() - context['todays_observations']
-        context['recent_observations'] = DailyObservation.objects.filter(
-            counsellor=user
-        ).select_related('patient')[:5]
+
+        context['todays_observations'] = todays_observations
+
+        # Minimum required observations per patient per day
+        minimum_daily_observations = 3
+
+        # Calculate how many observations are still pending.
+        # Each patient needs at least 3 observations per day.
+        pending_observations = 0
+
+        patient_observation_progress = []
+
+        for patient in assigned_patients:
+
+            observation_count = DailyObservation.objects.filter(
+                patient=patient,
+                counsellor=user,
+                date=today
+            ).count()
+
+            remaining = max(
+                0,
+                minimum_daily_observations - observation_count
+            )
+
+            pending_observations += remaining
+
+            patient_observation_progress.append({
+                'patient': patient,
+                'observation_count': observation_count,
+                'minimum_required': minimum_daily_observations,
+                'remaining': remaining,
+                'completed': observation_count >= minimum_daily_observations,
+            })
+
+        context['pending_observations'] = pending_observations
+
+        # Patient-wise observation progress for today
+        context['patient_observation_progress'] = (
+            patient_observation_progress
+        )
+
+        # Recent observations
+        context['recent_observations'] = (
+            DailyObservation.objects.filter(
+                counsellor=user
+            )
+            .select_related('patient')[:5]
+        )
 
         return context
 
@@ -82,14 +175,41 @@ class StoreDashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        inventory_items = Inventory.objects.select_related('item').all()
+        inventory_items = (
+            Inventory.objects
+            .select_related('item')
+            .all()
+        )
+
         context['inventory_items'] = inventory_items
-        context['low_stock_items'] = [inv for inv in inventory_items if inv.is_low_stock()]
-        context['pending_requests_count'] = ResourceRequest.objects.filter(status='PENDING').count()
-        context['issued_requests_count'] = ResourceRequest.objects.filter(status='ISSUED').count()
+
+        context['low_stock_items'] = [
+            inv
+            for inv in inventory_items
+            if inv.is_low_stock()
+        ]
+
+        context['pending_requests_count'] = (
+            ResourceRequest.objects.filter(
+                status='PENDING'
+            ).count()
+        )
+
+        context['issued_requests_count'] = (
+            ResourceRequest.objects.filter(
+                status='ISSUED'
+            ).count()
+        )
 
         # Chart data: stock levels per item
-        context['stock_labels'] = [inv.item.name for inv in inventory_items]
-        context['stock_values'] = [inv.quantity_in_stock for inv in inventory_items]
+        context['stock_labels'] = [
+            inv.item.name
+            for inv in inventory_items
+        ]
+
+        context['stock_values'] = [
+            inv.quantity_in_stock
+            for inv in inventory_items
+        ]
 
         return context
