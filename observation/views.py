@@ -14,6 +14,7 @@ from evidence.evidence_retriever import get_evidence_for_pattern
 from evidence.summary_builder import build_summary_data
 from evidence.ai_summarizer import generate_evidence_summary
 from django.utils import timezone
+from evidence.models import AISummaryHistory
 
 
 @method_decorator(role_required('COUNSELLOR'), name='dispatch')
@@ -145,42 +146,33 @@ class PatientObservationHistoryView(LoginRequiredMixin, ListView):
 
 
 class PatientAIAnalysisView(LoginRequiredMixin, View):
-    """
-    Generate an evidence-grounded AI summary
-    for an authorized patient's recent observations.
-    """
 
     def post(self, request, patient_id):
 
-        # Admin can access all patients
-        if request.user.role == 'ADMIN':
+        # --------------------------------------------------
+        # 1. Get patient
+        # --------------------------------------------------
+        patient = Patient.objects.get(pk=patient_id)
 
-            patient = Patient.objects.filter(
-                pk=patient_id
-            ).first()
+        # --------------------------------------------------
+        # 2. Access control
+        # --------------------------------------------------
+        if request.user.is_staff:
+            allowed = True
 
-        # Counsellor can access only assigned active patients
-        elif request.user.role == 'COUNSELLOR':
-
-            patient = Patient.objects.filter(
-                pk=patient_id,
-                assigned_counsellor__user=request.user,
-                is_active=True
-            ).first()
+        elif hasattr(request.user, 'counsellor_profile'):
+            allowed = patient.assigned_counsellor == request.user.counsellor_profile
 
         else:
+            allowed = False
 
-            patient = None
-
-        if not patient:
-
+        if not allowed:
             from django.http import Http404
+            raise Http404
 
-            raise Http404(
-                "You are not authorized to analyse this patient."
-            )
-
-
+        # --------------------------------------------------
+        # 3. Get recent observations
+        # --------------------------------------------------
         observations = list(
             get_patient_observations(
                 patient,
@@ -188,78 +180,174 @@ class PatientAIAnalysisView(LoginRequiredMixin, View):
             )
         )
 
-
         if not observations:
-
             return render(
                 request,
                 'observation/ai_analysis.html',
                 {
                     'patient': patient,
-                    'error': (
-                        'No recent observations are available '
-                        'for analysis.'
-                    ),
+                    'error': 'No observations available for AI analysis.'
                 }
             )
 
-
-        matched_patterns = find_matching_patterns(
-            observations
-        )
-
+        # --------------------------------------------------
+        # 4. Find matching observation patterns
+        # --------------------------------------------------
+        matched_patterns = find_matching_patterns(observations)
 
         if not matched_patterns:
-
             return render(
                 request,
                 'observation/ai_analysis.html',
                 {
                     'patient': patient,
-                    'error': (
-                        'No observation pattern matched '
-                        'the recent observations.'
-                    ),
+                    'error': 'No matching observation pattern was found.'
                 }
             )
 
-
+        # --------------------------------------------------
+        # 5. Analyze the first matched pattern
+        # --------------------------------------------------
         pattern = matched_patterns[0]
-
 
         pattern_result = analyze_pattern_match(
             pattern,
             observations
         )
 
-
+        # --------------------------------------------------
+        # 6. Retrieve research evidence
+        # --------------------------------------------------
         research_evidence = get_evidence_for_pattern(
             pattern
         )
 
-
+        # --------------------------------------------------
+        # 7. Build AI input
+        # --------------------------------------------------
         summary_data = build_summary_data(
             observations,
             pattern_result,
             research_evidence
         )
 
-
+        # --------------------------------------------------
+        # 8. Generate AI summary
+        # --------------------------------------------------
         ai_summary = generate_evidence_summary(
             summary_data
         )
 
+        # --------------------------------------------------
+        # 9. Calculate observation days
+        # --------------------------------------------------
+        observation_days = len(
+            set(
+                observation.date
+                for observation in observations
+            )
+        )
 
+        # --------------------------------------------------
+        # 10. SAVE AI SUMMARY HISTORY
+        # --------------------------------------------------
+        AISummaryHistory.objects.create(
+            patient=patient,
+            generated_by=request.user,
+            observation_count=len(observations),
+            observation_days=observation_days,
+            matched_pattern=pattern.name,
+            observation_summary=ai_summary.observation_summary,
+            observed_changes=ai_summary.observed_changes,
+            evidence_interpretation=ai_summary.evidence_interpretation,
+            recommended_follow_up=ai_summary.recommended_follow_up,
+            disclaimer=ai_summary.disclaimer,
+            research_evidence=research_evidence,
+        )
+
+        # --------------------------------------------------
+        # 11. Show current result
+        # --------------------------------------------------
         return render(
             request,
             'observation/ai_analysis.html',
             {
                 'patient': patient,
                 'observations': observations,
-                'pattern': pattern,
+                'matched_patterns': matched_patterns,
                 'pattern_result': pattern_result,
                 'research_evidence': research_evidence,
-                'summary_data': summary_data,
                 'ai_summary': ai_summary,
             }
         )
+
+class PatientAISummaryHistoryView(LoginRequiredMixin, ListView):
+
+    model = AISummaryHistory
+    template_name = 'observation/ai_summary_history.html'
+    context_object_name = 'summaries'
+
+    def get_queryset(self):
+
+        patient_id = self.kwargs['patient_id']
+
+        patient = Patient.objects.get(pk=patient_id)
+
+        # Admin can view all patients
+        if self.request.user.is_staff:
+            allowed = True
+
+        # Counsellor can view only assigned patients
+        elif hasattr(self.request.user, 'counsellor_profile'):
+            allowed = (
+                patient.assigned_counsellor
+                == self.request.user.counsellor_profile
+            )
+
+        else:
+            allowed = False
+
+        if not allowed:
+            from django.http import Http404
+            raise Http404
+
+        self.patient = patient
+
+        return (
+            AISummaryHistory.objects
+            .filter(patient=patient)
+            .order_by('-generated_at')
+        )
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+
+        context['patient'] = self.patient
+
+        return context
+
+class PatientAISummaryDetailView(LoginRequiredMixin, DetailView):
+
+    model = AISummaryHistory
+    template_name = 'observation/ai_summary_detail.html'
+    context_object_name = 'summary'
+
+    def get_object(self, queryset=None):
+
+        summary = super().get_object(queryset)
+
+        patient = summary.patient
+
+        if self.request.user.is_staff:
+            return summary
+
+        if (
+            hasattr(self.request.user, 'counsellor_profile')
+            and patient.assigned_counsellor
+            == self.request.user.counsellor_profile
+        ):
+            return summary
+
+        from django.http import Http404
+        raise Http404

@@ -1,5 +1,6 @@
 from django.db import models
-
+from django.conf import settings
+from patient.models import Patient
 
 class ResearchPaper(models.Model):
     title = models.CharField(max_length=500)
@@ -79,3 +80,67 @@ class ObservationPattern(models.Model):
 
     def __str__(self):
         return self.name
+
+class AISummaryHistory(models.Model):
+    """
+    Stores a generated AI observation summary so that previous
+    analysis results can be reviewed later.
+
+    This is an observation-support record, not a diagnosis.
+    """
+
+    patient = models.ForeignKey(
+        Patient,
+        on_delete=models.CASCADE,
+        related_name='ai_summary_history'
+    )
+
+    generated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='generated_ai_summaries'
+    )
+
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    observation_count = models.PositiveIntegerField(default=0)
+
+    observation_days = models.PositiveIntegerField(default=0)
+
+    matched_pattern = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    observation_summary = models.TextField()
+
+    observed_changes = models.JSONField(
+        default=list
+    )
+
+    evidence_interpretation = models.TextField(
+        blank=True
+    )
+
+    recommended_follow_up = models.TextField(
+        blank=True
+    )
+
+    disclaimer = models.TextField(
+        blank=True
+    )
+
+    research_evidence = models.JSONField(
+        default=list
+    )
+
+    class Meta:
+        ordering = ['-generated_at']
+
+    def __str__(self):
+        return (
+            f"AI Summary - {self.patient.full_name} "
+            f"({self.generated_at.strftime('%d-%m-%Y %H:%M')})"
+        )

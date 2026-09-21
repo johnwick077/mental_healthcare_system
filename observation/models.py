@@ -81,34 +81,83 @@ class DailyObservation(models.Model):
     def calculate_poi(self):
         """
         Patient Observation Index (POI).
-        This is NOT a diagnostic score — it only helps counsellors
-        prioritize which patients may need closer attention today.
+
+        POI is a non-diagnostic observation-prioritization score.
+        A higher score indicates that more observation factors
+        may require closer attention.
+
+        Maximum possible score: 20.
         """
+
         score = 0
 
-        mood_scores = {'HAPPY': 0, 'CALM': 1, 'SAD': 2, 'AGGRESSIVE': 4}
+        # Mood
+        mood_scores = {
+            'HAPPY': 0,
+            'CALM': 1,
+            'SAD': 2,
+            'AGGRESSIVE': 4,
+        }
+
         score += mood_scores.get(self.mood, 0)
 
+        # Behaviour
+        behaviour_scores = {
+            'COOPERATIVE': 0,
+            'WITHDRAWN': 2,
+            'RESTLESS': 3,
+            'DISRUPTIVE': 4,
+        }
+
+        score += behaviour_scores.get(self.behaviour, 0)
+
+        # Sleep
         if self.sleep_quality == 'POOR':
             score += 2
+
+        # Appetite
         if self.appetite == 'POOR':
             score += 2
+
+        # Personal hygiene
         if self.personal_hygiene == 'POOR':
             score += 2
+
+        # Communication
+        communication_scores = {
+            'NORMAL': 0,
+            'LIMITED': 2,
+            'NONE': 3,
+        }
+
+        score += communication_scores.get(
+            self.communication,
+            0
+        )
+
+        # Participation
         if self.participation == 'REFUSED':
             score += 3
 
         return score
 
-    def get_priority_level(self, score):
-        if score <= 2:
-            return self.PRIORITY_STABLE
-        elif score <= 5:
-            return self.PRIORITY_NEEDS_OBSERVATION
-        elif score <= 8:
-            return self.PRIORITY_NEEDS_ATTENTION
-        else:
-            return self.PRIORITY_HIGH
+
+def get_priority_level(self, score):
+    """
+    Convert the POI score into an observation priority level.
+    """
+
+    if score <= 4:
+        return self.PRIORITY_STABLE
+
+    elif score <= 8:
+        return self.PRIORITY_NEEDS_OBSERVATION
+
+    elif score <= 13:
+        return self.PRIORITY_NEEDS_ATTENTION
+
+    else:
+        return self.PRIORITY_HIGH
 
     def save(self, *args, **kwargs):
     # Automatically record the observation date and time

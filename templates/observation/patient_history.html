@@ -110,6 +110,12 @@
             >
                 Generate AI Analysis
             </button>
+            <a
+            href="{% url 'observation:patient_ai_history' patient.id %}"
+            class="btn btn-outline-secondary"
+            >
+                AI Analysis History
+            </a>
 
         </form>
 

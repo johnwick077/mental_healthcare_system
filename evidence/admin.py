@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ResearchPaper, ResearchDataset, ObservationPattern
+from .models import ResearchPaper, ResearchDataset, ObservationPattern, AISummaryHistory
 
 
 @admin.register(ResearchPaper)
@@ -52,3 +52,29 @@ class ObservationPatternAdmin(admin.ModelAdmin):
         "name",
         "description",
     )
+
+@admin.register(AISummaryHistory)
+class AISummaryHistoryAdmin(admin.ModelAdmin):
+    list_display = [
+        'patient',
+        'generated_by',
+        'observation_count',
+        'observation_days',
+        'matched_pattern',
+        'generated_at',
+    ]
+
+    list_filter = [
+        'generated_at',
+        'matched_pattern',
+    ]
+
+    search_fields = [
+        'patient__full_name',
+        'matched_pattern',
+        'observation_summary',
+    ]
+
+    readonly_fields = [
+        'generated_at',
+    ]
