@@ -11,3 +11,5 @@ staticfiles/
 templates/dashboard/landing.html
 observation/ai_utils.py
 patient/management/
+.idea/
+accounts/management/

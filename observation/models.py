@@ -6,11 +6,17 @@ from django.utils import timezone
 
 class DailyObservation(models.Model):
     """
-    A single day's observation entry for a patient.
-    Never overwritten — each day creates a new row (observation history).
-    This model does NOT diagnose; it only records observable behaviour
-    to help counsellors prioritize attention.
+    A single observation entry for a patient.
+
+    Each observation is stored as a separate record.
+    This model does not diagnose a patient.
+    It only records observable factors to help counsellors
+    prioritize patients who may need closer observation.
     """
+
+    # ---------------------------------------------------------
+    # MOOD
+    # ---------------------------------------------------------
 
     MOOD_CHOICES = [
         ('HAPPY', 'Happy'),
@@ -18,80 +24,246 @@ class DailyObservation(models.Model):
         ('SAD', 'Sad'),
         ('AGGRESSIVE', 'Aggressive'),
     ]
+
+    # ---------------------------------------------------------
+    # BEHAVIOUR
+    # ---------------------------------------------------------
+
     BEHAVIOUR_CHOICES = [
         ('COOPERATIVE', 'Cooperative'),
         ('WITHDRAWN', 'Withdrawn'),
         ('RESTLESS', 'Restless'),
         ('DISRUPTIVE', 'Disruptive'),
     ]
-    SLEEP_CHOICES = [('GOOD', 'Good'), ('POOR', 'Poor')]
-    APPETITE_CHOICES = [('GOOD', 'Good'), ('POOR', 'Poor')]
-    HYGIENE_CHOICES = [('GOOD', 'Good'), ('POOR', 'Poor')]
+
+    # ---------------------------------------------------------
+    # SLEEP
+    # ---------------------------------------------------------
+
+    SLEEP_CHOICES = [
+        ('GOOD', 'Good'),
+        ('POOR', 'Poor'),
+    ]
+
+    # ---------------------------------------------------------
+    # APPETITE
+    # ---------------------------------------------------------
+
+    APPETITE_CHOICES = [
+        ('GOOD', 'Good'),
+        ('POOR', 'Poor'),
+    ]
+
+    # ---------------------------------------------------------
+    # PERSONAL HYGIENE
+    # ---------------------------------------------------------
+
+    HYGIENE_CHOICES = [
+        ('GOOD', 'Good'),
+        ('POOR', 'Poor'),
+    ]
+
+    # ---------------------------------------------------------
+    # COMMUNICATION
+    # ---------------------------------------------------------
+
     COMMUNICATION_CHOICES = [
         ('NORMAL', 'Normal'),
         ('LIMITED', 'Limited'),
         ('NONE', 'None'),
     ]
-    PARTICIPATION_CHOICES = [('ACTIVE', 'Active'), ('REFUSED', 'Refused')]
 
-    PRIORITY_STABLE = 'STABLE'
-    PRIORITY_NEEDS_OBSERVATION = 'NEEDS_OBSERVATION'
-    PRIORITY_NEEDS_ATTENTION = 'NEEDS_ATTENTION'
-    PRIORITY_HIGH = 'HIGH_PRIORITY'
-    PRIORITY_CHOICES = [
-        (PRIORITY_STABLE, 'Stable'),
-        (PRIORITY_NEEDS_OBSERVATION, 'Needs Observation'),
-        (PRIORITY_NEEDS_ATTENTION, 'Needs Attention'),
-        (PRIORITY_HIGH, 'High Priority'),
+    # ---------------------------------------------------------
+    # PARTICIPATION
+    # ---------------------------------------------------------
+
+    PARTICIPATION_CHOICES = [
+        ('ACTIVE', 'Active'),
+        ('REFUSED', 'Refused'),
     ]
 
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='observations')
+    # ---------------------------------------------------------
+    # PRIORITY LEVELS
+    # ---------------------------------------------------------
+
+    PRIORITY_STABLE = 'STABLE'
+
+    PRIORITY_NEEDS_OBSERVATION = 'NEEDS_OBSERVATION'
+
+    PRIORITY_NEEDS_ATTENTION = 'NEEDS_ATTENTION'
+
+    PRIORITY_HIGH = 'HIGH_PRIORITY'
+
+    PRIORITY_CHOICES = [
+        (
+            PRIORITY_STABLE,
+            'Stable'
+        ),
+        (
+            PRIORITY_NEEDS_OBSERVATION,
+            'Needs Observation'
+        ),
+        (
+            PRIORITY_NEEDS_ATTENTION,
+            'Needs Attention'
+        ),
+        (
+            PRIORITY_HIGH,
+            'High Priority'
+        ),
+    ]
+
+    # ---------------------------------------------------------
+    # PATIENT
+    # ---------------------------------------------------------
+
+    patient = models.ForeignKey(
+        Patient,
+        on_delete=models.CASCADE,
+        related_name='observations'
+    )
+
+    # ---------------------------------------------------------
+    # COUNSELLOR
+    # ---------------------------------------------------------
+
     counsellor = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='observations_made'
     )
+
+    # ---------------------------------------------------------
+    # DATE AND TIME
+    # ---------------------------------------------------------
+
     date = models.DateField()
+
     time = models.TimeField()
 
-    mood = models.CharField(max_length=15, choices=MOOD_CHOICES)
-    behaviour = models.CharField(max_length=15, choices=BEHAVIOUR_CHOICES)
-    sleep_quality = models.CharField(max_length=5, choices=SLEEP_CHOICES)
-    appetite = models.CharField(max_length=5, choices=APPETITE_CHOICES)
-    personal_hygiene = models.CharField(max_length=5, choices=HYGIENE_CHOICES)
-    communication = models.CharField(max_length=10, choices=COMMUNICATION_CHOICES)
-    participation = models.CharField(max_length=10, choices=PARTICIPATION_CHOICES)
-    remarks = models.TextField(blank=True)
+    # ---------------------------------------------------------
+    # OBSERVATION FACTORS
+    # ---------------------------------------------------------
 
-    poi_score = models.PositiveIntegerField(default=0, editable=False)
-    priority_level = models.CharField(
-        max_length=20, choices=PRIORITY_CHOICES, default=PRIORITY_STABLE, editable=False
+    mood = models.CharField(
+        max_length=15,
+        choices=MOOD_CHOICES
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    behaviour = models.CharField(
+        max_length=15,
+        choices=BEHAVIOUR_CHOICES
+    )
+
+    sleep_quality = models.CharField(
+        max_length=5,
+        choices=SLEEP_CHOICES
+    )
+
+    appetite = models.CharField(
+        max_length=5,
+        choices=APPETITE_CHOICES
+    )
+
+    personal_hygiene = models.CharField(
+        max_length=5,
+        choices=HYGIENE_CHOICES
+    )
+
+    communication = models.CharField(
+        max_length=10,
+        choices=COMMUNICATION_CHOICES
+    )
+
+    participation = models.CharField(
+        max_length=10,
+        choices=PARTICIPATION_CHOICES
+    )
+
+    # ---------------------------------------------------------
+    # REMARKS
+    # ---------------------------------------------------------
+
+    remarks = models.TextField(
+        blank=True
+    )
+
+    # ---------------------------------------------------------
+    # POI
+    # ---------------------------------------------------------
+
+    poi_score = models.PositiveIntegerField(
+        default=0,
+        editable=False
+    )
+
+    # ---------------------------------------------------------
+    # PRIORITY
+    # ---------------------------------------------------------
+
+    priority_level = models.CharField(
+        max_length=20,
+        choices=PRIORITY_CHOICES,
+        default=PRIORITY_STABLE,
+        editable=False
+    )
+
+    # ---------------------------------------------------------
+    # CREATED TIME
+    # ---------------------------------------------------------
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    # ---------------------------------------------------------
+    # META
+    # ---------------------------------------------------------
 
     class Meta:
         ordering = ['-date', '-time']
-        # Prevents accidentally saving two observations for the same
-        # patient at the exact same date+time slot.
-        unique_together = ('patient', 'date', 'time')
+
+        # Prevent duplicate observations for the exact
+        # same patient, date and time.
+        unique_together = (
+            'patient',
+            'date',
+            'time',
+        )
+
+    # ---------------------------------------------------------
+    # STRING REPRESENTATION
+    # ---------------------------------------------------------
 
     def __str__(self):
         return f"{self.patient.full_name} - {self.date}"
+
+    # ---------------------------------------------------------
+    # CALCULATE POI
+    # ---------------------------------------------------------
 
     def calculate_poi(self):
         """
         Patient Observation Index (POI).
 
-        POI is a non-diagnostic observation-prioritization score.
-        A higher score indicates that more observation factors
-        may require closer attention.
+        This is NOT a diagnostic score.
 
-        Maximum possible score: 20.
+        It only helps counsellors prioritize patients
+        who may require closer observation.
+
+        Higher score = more observation factors
+        requiring attention.
+
+        Maximum possible score = 20.
         """
 
         score = 0
 
-        # Mood
+        # -----------------------------------------------------
+        # MOOD SCORE
+        # -----------------------------------------------------
+
         mood_scores = {
             'HAPPY': 0,
             'CALM': 1,
@@ -99,9 +271,15 @@ class DailyObservation(models.Model):
             'AGGRESSIVE': 4,
         }
 
-        score += mood_scores.get(self.mood, 0)
+        score += mood_scores.get(
+            self.mood,
+            0
+        )
 
-        # Behaviour
+        # -----------------------------------------------------
+        # BEHAVIOUR SCORE
+        # -----------------------------------------------------
+
         behaviour_scores = {
             'COOPERATIVE': 0,
             'WITHDRAWN': 2,
@@ -109,21 +287,36 @@ class DailyObservation(models.Model):
             'DISRUPTIVE': 4,
         }
 
-        score += behaviour_scores.get(self.behaviour, 0)
+        score += behaviour_scores.get(
+            self.behaviour,
+            0
+        )
 
-        # Sleep
+        # -----------------------------------------------------
+        # SLEEP SCORE
+        # -----------------------------------------------------
+
         if self.sleep_quality == 'POOR':
             score += 2
 
-        # Appetite
+        # -----------------------------------------------------
+        # APPETITE SCORE
+        # -----------------------------------------------------
+
         if self.appetite == 'POOR':
             score += 2
 
-        # Personal hygiene
+        # -----------------------------------------------------
+        # PERSONAL HYGIENE SCORE
+        # -----------------------------------------------------
+
         if self.personal_hygiene == 'POOR':
             score += 2
 
-        # Communication
+        # -----------------------------------------------------
+        # COMMUNICATION SCORE
+        # -----------------------------------------------------
+
         communication_scores = {
             'NORMAL': 0,
             'LIMITED': 2,
@@ -135,41 +328,84 @@ class DailyObservation(models.Model):
             0
         )
 
-        # Participation
+        # -----------------------------------------------------
+        # PARTICIPATION SCORE
+        # -----------------------------------------------------
+
         if self.participation == 'REFUSED':
             score += 3
 
         return score
 
+    # ---------------------------------------------------------
+    # GET PRIORITY LEVEL
+    # ---------------------------------------------------------
 
-def get_priority_level(self, score):
-    """
-    Convert the POI score into an observation priority level.
-    """
+    def get_priority_level(self, score):
+        """
+        Convert the POI score into an observation
+        priority level.
 
-    if score <= 4:
-        return self.PRIORITY_STABLE
+        This is NOT a medical diagnosis.
+        """
 
-    elif score <= 8:
-        return self.PRIORITY_NEEDS_OBSERVATION
+        if score <= 4:
+            return self.PRIORITY_STABLE
 
-    elif score <= 13:
-        return self.PRIORITY_NEEDS_ATTENTION
+        elif score <= 8:
+            return self.PRIORITY_NEEDS_OBSERVATION
 
-    else:
-        return self.PRIORITY_HIGH
+        elif score <= 13:
+            return self.PRIORITY_NEEDS_ATTENTION
+
+        else:
+            return self.PRIORITY_HIGH
+
+    # ---------------------------------------------------------
+    # SAVE
+    # ---------------------------------------------------------
 
     def save(self, *args, **kwargs):
-    # Automatically record the observation date and time
-    # when a new observation is created.
+        """
+        Automatically:
+
+        1. Set the current date.
+        2. Set the current time.
+        3. Calculate POI.
+        4. Calculate priority level.
+        5. Save the observation.
+        """
+
+        # -----------------------------------------------------
+        # AUTOMATIC DATE
+        # -----------------------------------------------------
+
         if not self.date:
             self.date = timezone.localdate()
+
+        # -----------------------------------------------------
+        # AUTOMATIC TIME
+        # -----------------------------------------------------
 
         if not self.time:
             self.time = timezone.localtime().time()
 
-    # Calculate POI and priority automatically
+        # -----------------------------------------------------
+        # CALCULATE POI
+        # -----------------------------------------------------
+
         self.poi_score = self.calculate_poi()
-        self.priority_level = self.get_priority_level(self.poi_score)
+
+        # -----------------------------------------------------
+        # CALCULATE PRIORITY
+        # -----------------------------------------------------
+
+        self.priority_level = self.get_priority_level(
+            self.poi_score
+        )
+
+        # -----------------------------------------------------
+        # SAVE TO DATABASE
+        # -----------------------------------------------------
 
         super().save(*args, **kwargs)
