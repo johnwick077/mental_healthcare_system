@@ -2,6 +2,7 @@ from typing import List
 
 from django.conf import settings
 from google import genai
+from google.genai import types
 from pydantic import BaseModel, Field
 
 
@@ -96,12 +97,12 @@ def generate_evidence_summary(data):
     prompt = build_summary_prompt(data)
 
     response = client.models.generate_content(
-        model="gemini-3.5-flash-lite",
+        model="gemini-3.6-flash",
         contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "response_json_schema": AISummary.model_json_schema(),
-        },
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=AISummary,
+        ),
     )
 
     return AISummary.model_validate_json(
