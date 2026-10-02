@@ -1,27 +1,112 @@
+from datetime import date, datetime
+
+
+def make_json_safe(value):
+    """
+    Convert Python values into JSON-safe values.
+
+    Important because Django JSONField cannot directly store
+    datetime.date or datetime objects.
+    """
+
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+
+    if isinstance(value, dict):
+        return {
+            key: make_json_safe(item)
+            for key, item in value.items()
+        }
+
+    if isinstance(value, list):
+        return [
+            make_json_safe(item)
+            for item in value
+        ]
+
+    if isinstance(value, tuple):
+        return [
+            make_json_safe(item)
+            for item in value
+        ]
+
+    return value
+
+
+def build_observation_data(observations):
+    """
+    Convert observations into structured information
+    for the AI model.
+    """
+
+    data = []
+
+    for observation in observations:
+
+        data.append(
+            {
+                "date": (
+                    observation.date.isoformat()
+                    if observation.date
+                    else None
+                ),
+
+                "time": (
+                    observation.time.isoformat()
+                    if observation.time
+                    else None
+                ),
+
+                "mood": observation.mood,
+                "behaviour": observation.behaviour,
+                "sleep_quality": observation.sleep_quality,
+                "appetite": observation.appetite,
+                "personal_hygiene": (
+                    observation.personal_hygiene
+                ),
+                "communication": observation.communication,
+                "participation": observation.participation,
+                "poi_score": observation.poi_score,
+                "priority_level": observation.priority_level,
+                "remarks": observation.remarks,
+            }
+        )
+
+    return data
+
+
 def build_summary_data(
     observations,
     pattern_result,
     research_evidence,
+    complete_analysis=None,
 ):
     """
-    Build a structured, non-identifying data object
-    for the AI summarization layer.
+    Build the complete structured input for AI summarization.
     """
 
-    return {
-        "observation_period": {
-            "observation_count": len(observations),
-        },
+    if complete_analysis is None:
+        complete_analysis = {}
 
-        "analysis": {
-            "trends": pattern_result.get("trends", {}),
-            "matched_fields": pattern_result.get(
-                "matched_fields",
-                {}
-            ),
-        },
+    trends = complete_analysis.get(
+        "trends",
+        {},
+    )
 
-        "matched_pattern": {
+    condition_analysis = complete_analysis.get(
+        "condition_analysis",
+        {},
+    )
+
+    repeated_conditions = complete_analysis.get(
+        "repeated_conditions",
+        [],
+    )
+
+    matched_pattern = {}
+
+    if pattern_result:
+        matched_pattern = {
             "name": pattern_result.get(
                 "pattern_name"
             ),
@@ -34,7 +119,86 @@ def build_summary_data(
             "minimum_occurrences": pattern_result.get(
                 "minimum_occurrences"
             ),
+            "possible_concern": pattern_result.get(
+                "possible_concern"
+            ),
+            "recommendation": pattern_result.get(
+                "recommendation"
+            ),
+        }
+
+    data = {
+        "observation_period": {
+            "observation_count": len(
+                observations
+            ),
+            "observation_days": len(
+                {
+                    observation.date
+                    for observation in observations
+                    if observation.date
+                }
+            ),
         },
 
-        "research_evidence": research_evidence,
+        "observations": build_observation_data(
+            observations
+        ),
+
+        "complete_condition_analysis": {
+            "mood": condition_analysis.get(
+                "mood",
+                {},
+            ),
+            "behaviour": condition_analysis.get(
+                "behaviour",
+                {},
+            ),
+            "sleep_quality": condition_analysis.get(
+                "sleep_quality",
+                {},
+            ),
+            "appetite": condition_analysis.get(
+                "appetite",
+                {},
+            ),
+            "personal_hygiene": condition_analysis.get(
+                "personal_hygiene",
+                {},
+            ),
+            "communication": condition_analysis.get(
+                "communication",
+                {},
+            ),
+            "participation": condition_analysis.get(
+                "participation",
+                {},
+            ),
+        },
+
+        "repeated_conditions": (
+            repeated_conditions
+        ),
+
+        "analysis": {
+            "trends": trends,
+
+            "matched_fields": (
+                pattern_result.get(
+                    "matched_fields",
+                    {},
+                )
+                if pattern_result
+                else {}
+            ),
+        },
+
+        "matched_pattern": matched_pattern,
+
+        "research_evidence": (
+            research_evidence
+            or []
+        ),
     }
+
+    return make_json_safe(data)

@@ -1,74 +1,201 @@
+from collections import Counter
+
 from evidence.models import ObservationPattern
+from evidence.trend_analyzer import analyze_patient_trends
 
 
-def pattern_matches(pattern, observations):
+# ============================================================
+# ALL OBSERVATION PARAMETERS
+# ============================================================
+
+OBSERVATION_FIELDS = [
+    "mood",
+    "behaviour",
+    "sleep_quality",
+    "appetite",
+    "personal_hygiene",
+    "communication",
+    "participation",
+]
+
+
+# ============================================================
+# FIELD DISPLAY NAMES
+# ============================================================
+
+FIELD_DISPLAY_NAMES = {
+    "mood": "Mood",
+    "behaviour": "Behaviour",
+    "sleep_quality": "Sleep Quality",
+    "appetite": "Appetite",
+    "personal_hygiene": "Personal Hygiene",
+    "communication": "Communication",
+    "participation": "Participation",
+}
+
+
+# ============================================================
+# GET ALL POSSIBLE CONDITIONS FROM MODEL CHOICES
+# ============================================================
+
+def get_possible_conditions(field):
     """
-    Check whether an ObservationPattern matches
-    the supplied DailyObservation records.
+    Return every possible value defined for a DailyObservation field.
+    """
 
-    The pattern uses the observation_fields JSON field.
+    from observation.models import DailyObservation
+
+    model_field = DailyObservation._meta.get_field(field)
+
+    return [
+        {
+            "value": value,
+            "label": label,
+        }
+        for value, label in model_field.choices
+    ]
+
+
+# ============================================================
+# COUNT CONDITIONS
+# ============================================================
+
+def count_condition_occurrences(observations, field):
+    """
+    Count every possible condition for one observation field.
+    """
+
+    conditions = get_possible_conditions(field)
+
+    values = [
+        getattr(observation, field, None)
+        for observation in observations
+    ]
+
+    counter = Counter(values)
+
+    result = {}
+
+    for condition in conditions:
+        value = condition["value"]
+
+        result[value] = {
+            "label": condition["label"],
+            "occurrences": counter.get(value, 0),
+            "observed": counter.get(value, 0) > 0,
+        }
+
+    return result
+
+
+# ============================================================
+# ANALYZE ALL CONDITIONS
+# ============================================================
+
+def analyze_all_conditions(
+    observations,
+    minimum_occurrences=2,
+):
+    """
+    Analyze every possible condition across all seven
+    observation parameters.
+
+    This does NOT assume that only 'poor sleep' or
+    'withdrawn behaviour' are important.
     """
 
     if not observations:
-        return False
+        return {}
 
-    # Check minimum number of observations.
-    if len(observations) < pattern.minimum_days:
-        return False
+    total_observations = len(observations)
 
-    # Get matching requirements from JSON.
-    requirements = pattern.observation_fields or []
+    analysis = {}
 
-    if not requirements:
-        return False
+    for field in OBSERVATION_FIELDS:
 
-    # Check every requirement using the pattern's
-    # minimum occurrence requirement.
-    for requirement in requirements:
-
-        if not requirement_is_satisfied(
+        conditions = count_condition_occurrences(
             observations,
-            requirement,
-            minimum_occurrences=pattern.minimum_occurrences
-        ):
-            return False
+            field,
+        )
 
-    return True
+        for value, condition in conditions.items():
+
+            occurrences = condition["occurrences"]
+
+            if total_observations:
+                percentage = round(
+                    (occurrences / total_observations) * 100,
+                    2,
+                )
+            else:
+                percentage = 0
+
+            condition["percentage"] = percentage
+
+            condition["repeated"] = (
+                occurrences >= minimum_occurrences
+            )
+
+        analysis[field] = {
+            "display_name": FIELD_DISPLAY_NAMES.get(
+                field,
+                field.replace("_", " ").title(),
+            ),
+            "total_observations": total_observations,
+            "conditions": conditions,
+        }
+
+    return analysis
 
 
-def find_matching_patterns(observations):
+# ============================================================
+# GET REPEATED CONDITIONS ONLY
+# ============================================================
+
+def get_repeated_conditions(
+    condition_analysis,
+    minimum_occurrences=2,
+):
     """
-    Find all active ObservationPatterns that match
-    the patient's recent observations.
+    Return conditions that occurred repeatedly.
     """
 
-    if not observations:
-        return []
+    repeated = []
 
-    patterns = ObservationPattern.objects.filter(
-        active=True
-    )
+    for field, field_data in condition_analysis.items():
 
-    matched_patterns = []
+        for value, condition in field_data["conditions"].items():
 
-    for pattern in patterns:
+            if condition["occurrences"] >= minimum_occurrences:
 
-        if pattern_matches(pattern, observations):
-            matched_patterns.append(pattern)
+                repeated.append(
+                    {
+                        "field": field,
+                        "field_name": field_data["display_name"],
+                        "value": value,
+                        "label": condition["label"],
+                        "occurrences": condition["occurrences"],
+                        "percentage": condition["percentage"],
+                    }
+                )
 
-    return matched_patterns
+    return repeated
 
+
+# ============================================================
+# EXISTING RESEARCH PATTERN MATCHING
+# ============================================================
 
 def get_field_values(observations, field):
-    """
-    Get the values of a specific observation field
-    from the supplied observations.
-    """
-
     values = []
 
     for observation in observations:
-        value = getattr(observation, field, None)
+
+        value = getattr(
+            observation,
+            field,
+            None,
+        )
 
         if value is not None:
             values.append(value)
@@ -79,16 +206,11 @@ def get_field_values(observations, field):
 def count_matching_values(
     observations,
     field,
-    expected_value
+    expected_value,
 ):
-    """
-    Count how many observations contain
-    the expected field value.
-    """
-
     values = get_field_values(
         observations,
-        field
+        field,
     )
 
     return sum(
@@ -101,13 +223,8 @@ def count_matching_values(
 def requirement_is_satisfied(
     observations,
     requirement,
-    minimum_occurrences=1
+    minimum_occurrences=1,
 ):
-    """
-    Check whether an observation requirement
-    occurs at least the required number of times.
-    """
-
     field = requirement.get("field")
     expected_value = requirement.get("value")
 
@@ -117,30 +234,97 @@ def requirement_is_satisfied(
     count = count_matching_values(
         observations,
         field,
-        expected_value
+        expected_value,
     )
 
     return count >= minimum_occurrences
 
-def analyze_pattern_match(pattern, observations):
-    """
-    Combine pattern matching with the patient's
-    observation trends.
 
-    Returns structured information that can later
-    be passed to the research evidence layer.
+def pattern_matches(
+    pattern,
+    observations,
+):
+    """
+    Match a research-backed ObservationPattern.
+
+    Every condition defined by the pattern must satisfy
+    its minimum occurrence requirement.
     """
 
-    if not pattern_matches(pattern, observations):
+    if not observations:
+        return False
+
+    if len(observations) < pattern.minimum_days:
+        return False
+
+    requirements = (
+        pattern.observation_fields
+        or []
+    )
+
+    if not requirements:
+        return False
+
+    for requirement in requirements:
+
+        if not requirement_is_satisfied(
+            observations,
+            requirement,
+            minimum_occurrences=(
+                pattern.minimum_occurrences
+            ),
+        ):
+            return False
+
+    return True
+
+
+def find_matching_patterns(observations):
+
+    if not observations:
+        return []
+
+    patterns = ObservationPattern.objects.filter(
+        active=True
+    )
+
+    matched_patterns = []
+
+    for pattern in patterns:
+
+        if pattern_matches(
+            pattern,
+            observations,
+        ):
+            matched_patterns.append(pattern)
+
+    return matched_patterns
+
+
+# ============================================================
+# ANALYZE RESEARCH PATTERN
+# ============================================================
+
+def analyze_pattern_match(
+    pattern,
+    observations,
+):
+
+    if not pattern_matches(
+        pattern,
+        observations,
+    ):
         return None
 
-    from evidence.trend_analyzer import analyze_patient_trends
-
-    trend_result = analyze_patient_trends(observations)
+    trend_result = analyze_patient_trends(
+        observations
+    )
 
     matched_fields = {}
 
-    for requirement in pattern.observation_fields or []:
+    for requirement in (
+        pattern.observation_fields or []
+    ):
 
         field = requirement.get("field")
         expected_value = requirement.get("value")
@@ -153,8 +337,8 @@ def analyze_pattern_match(pattern, observations):
             "occurrences": count_matching_values(
                 observations,
                 field,
-                expected_value
-            )
+                expected_value,
+            ),
         }
 
     return {
@@ -162,11 +346,57 @@ def analyze_pattern_match(pattern, observations):
         "pattern_description": pattern.pattern_description,
         "possible_concern": pattern.possible_concern,
         "recommendation": pattern.recommendation,
-
         "minimum_days": pattern.minimum_days,
         "minimum_occurrences": pattern.minimum_occurrences,
-
         "matched_fields": matched_fields,
-
         "trends": trend_result,
+    }
+
+
+# ============================================================
+# COMPLETE OBSERVATION ANALYSIS
+# ============================================================
+
+def analyze_complete_observations(
+    observations,
+    minimum_occurrences=2,
+):
+    """
+    Complete analysis used when generating the AI summary.
+
+    It considers ALL possible conditions for:
+        - Mood
+        - Behaviour
+        - Sleep
+        - Appetite
+        - Hygiene
+        - Communication
+        - Participation
+    """
+
+    if not observations:
+        return {
+            "condition_analysis": {},
+            "repeated_conditions": [],
+            "trends": {},
+        }
+
+    condition_analysis = analyze_all_conditions(
+        observations,
+        minimum_occurrences=minimum_occurrences,
+    )
+
+    repeated_conditions = get_repeated_conditions(
+        condition_analysis,
+        minimum_occurrences=minimum_occurrences,
+    )
+
+    trends = analyze_patient_trends(
+        observations
+    )
+
+    return {
+        "condition_analysis": condition_analysis,
+        "repeated_conditions": repeated_conditions,
+        "trends": trends,
     }
