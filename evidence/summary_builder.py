@@ -58,16 +58,33 @@ def build_observation_data(observations):
                 ),
 
                 "mood": observation.mood,
+
                 "behaviour": observation.behaviour,
-                "sleep_quality": observation.sleep_quality,
+
+                "sleep_quality": (
+                    observation.sleep_quality
+                ),
+
                 "appetite": observation.appetite,
+
                 "personal_hygiene": (
                     observation.personal_hygiene
                 ),
-                "communication": observation.communication,
-                "participation": observation.participation,
+
+                "communication": (
+                    observation.communication
+                ),
+
+                "participation": (
+                    observation.participation
+                ),
+
                 "poi_score": observation.poi_score,
-                "priority_level": observation.priority_level,
+
+                "priority_level": (
+                    observation.priority_level
+                ),
+
                 "remarks": observation.remarks,
             }
         )
@@ -88,6 +105,10 @@ def build_summary_data(
     if complete_analysis is None:
         complete_analysis = {}
 
+    # ========================================================
+    # ANALYSIS DATA
+    # ========================================================
+
     trends = complete_analysis.get(
         "trends",
         {},
@@ -103,85 +124,169 @@ def build_summary_data(
         [],
     )
 
+
+    # ========================================================
+    # OBSERVATION PERIOD
+    # ========================================================
+
+    observation_count = len(
+        observations
+    )
+
+    observation_dates = {
+        observation.date
+        for observation in observations
+        if observation.date
+    }
+
+    observation_days = len(
+        observation_dates
+    )
+
+    average_observations_per_day = (
+        round(
+            observation_count / observation_days,
+            2
+        )
+        if observation_days > 0
+        else 0
+    )
+
+
+    # ========================================================
+    # MATCHED PATTERN
+    # ========================================================
+
     matched_pattern = {}
 
     if pattern_result:
+
         matched_pattern = {
+
             "name": pattern_result.get(
                 "pattern_name"
             ),
+
             "description": pattern_result.get(
                 "pattern_description"
             ),
+
             "minimum_days": pattern_result.get(
                 "minimum_days"
             ),
+
             "minimum_occurrences": pattern_result.get(
                 "minimum_occurrences"
             ),
+
             "possible_concern": pattern_result.get(
                 "possible_concern"
             ),
+
             "recommendation": pattern_result.get(
                 "recommendation"
             ),
         }
 
+
+    # ========================================================
+    # COMPLETE STRUCTURED DATA
+    # ========================================================
+
     data = {
+
+        # ----------------------------------------------------
+        # Observation period
+        # ----------------------------------------------------
+
         "observation_period": {
-            "observation_count": len(
-                observations
+
+            "observation_count": (
+                observation_count
             ),
-            "observation_days": len(
-                {
-                    observation.date
-                    for observation in observations
-                    if observation.date
-                }
+
+            "observation_days": (
+                observation_days
+            ),
+
+            "average_observations_per_day": (
+                average_observations_per_day
             ),
         },
 
-        "observations": build_observation_data(
-            observations
+
+        # ----------------------------------------------------
+        # Individual observations
+        # ----------------------------------------------------
+
+        "observations": (
+            build_observation_data(
+                observations
+            )
         ),
 
+
+        # ----------------------------------------------------
+        # Complete condition analysis
+        # ----------------------------------------------------
+
         "complete_condition_analysis": {
+
             "mood": condition_analysis.get(
                 "mood",
                 {},
             ),
+
             "behaviour": condition_analysis.get(
                 "behaviour",
                 {},
             ),
+
             "sleep_quality": condition_analysis.get(
                 "sleep_quality",
                 {},
             ),
+
             "appetite": condition_analysis.get(
                 "appetite",
                 {},
             ),
+
             "personal_hygiene": condition_analysis.get(
                 "personal_hygiene",
                 {},
             ),
+
             "communication": condition_analysis.get(
                 "communication",
                 {},
             ),
+
             "participation": condition_analysis.get(
                 "participation",
                 {},
             ),
         },
 
+
+        # ----------------------------------------------------
+        # Repeated conditions
+        # ----------------------------------------------------
+
         "repeated_conditions": (
             repeated_conditions
         ),
 
+
+        # ----------------------------------------------------
+        # Analysis
+        # ----------------------------------------------------
+
         "analysis": {
-            "trends": trends,
+
+            "trends": (
+                trends
+            ),
 
             "matched_fields": (
                 pattern_result.get(
@@ -193,7 +298,19 @@ def build_summary_data(
             ),
         },
 
-        "matched_pattern": matched_pattern,
+
+        # ----------------------------------------------------
+        # Matched pattern
+        # ----------------------------------------------------
+
+        "matched_pattern": (
+            matched_pattern
+        ),
+
+
+        # ----------------------------------------------------
+        # Research evidence
+        # ----------------------------------------------------
 
         "research_evidence": (
             research_evidence

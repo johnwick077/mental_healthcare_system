@@ -1,7 +1,21 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
-    <h3>My Observation History</h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>Observation History</h2>
+            <p class="text-muted mb-0">
+                View and review your recorded patient observations.
+            </p>
+        </div>
+
+        <a href="{% url 'dashboard:counsellor_dashboard' %}"
+           class="btn btn-outline-secondary">
+            ← Back to Dashboard
+        </a>
+
+    </div>
     <form method="get" class="row g-2 mb-3">
     <div class="col-md-4">
         <input type="text" name="search" class="form-control" placeholder="Search patient..." value="{{ request.GET.search }}">

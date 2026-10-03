@@ -3,6 +3,7 @@ from .models import DailyObservation
 
 
 class DailyObservationForm(forms.ModelForm):
+
     class Meta:
         model = DailyObservation
 
@@ -19,9 +20,11 @@ class DailyObservationForm(forms.ModelForm):
         ]
 
         widgets = {
+
             'patient': forms.Select(
                 attrs={
-                    'class': 'form-select'
+                    'class': 'form-select',
+                    'id': 'id_patient',
                 }
             ),
 
@@ -71,21 +74,33 @@ class DailyObservationForm(forms.ModelForm):
                 attrs={
                     'class': 'form-control',
                     'rows': 4,
-                    'placeholder': 'Add any relevant observation remarks...'
+                    'placeholder': (
+                        'Add any relevant observation remarks...'
+                    )
                 }
             ),
         }
 
     def __init__(self, *args, **kwargs):
-        # Restrict patient dropdown to only this counsellor's
-        # assigned active patients.
+
+        # Logged-in counsellor
         user = kwargs.pop('user', None)
 
         super().__init__(*args, **kwargs)
 
+        # Only show active patients assigned
+        # to the logged-in counsellor.
         if user and hasattr(user, 'counsellor_profile'):
+
             self.fields['patient'].queryset = (
-                user.counsellor_profile.patients.filter(
+                user.counsellor_profile.patients
+                .filter(
                     is_active=True
+                )
+                .select_related(
+                    'ward'
+                )
+                .order_by(
+                    'full_name'
                 )
             )

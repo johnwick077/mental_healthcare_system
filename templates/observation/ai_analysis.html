@@ -2,15 +2,31 @@
 
 {% block content %}
 
-<div class="container mt-4">
+<div class="container mt-4 mb-5">
 
-    <h3>AI Observation Analysis</h3>
+    <!-- ================================================= -->
+    <!-- PAGE HEADER -->
+    <!-- ================================================= -->
 
-    <p>
-        <strong>Patient:</strong> {{ patient.full_name }}
-    </p>
+    <div class="mb-4">
+
+        <h3>
+            AI Observation Analysis
+        </h3>
+
+        <p class="mb-0">
+            <strong>Patient:</strong>
+            {{ patient.full_name }}
+        </p>
+
+    </div>
+
 
     {% if error %}
+
+        <!-- ================================================= -->
+        <!-- ERROR -->
+        <!-- ================================================= -->
 
         <div class="alert alert-warning">
             {{ error }}
@@ -18,25 +34,80 @@
 
     {% else %}
 
-        <!-- Observation Summary -->
+
+        <!-- ================================================= -->
+        <!-- OBSERVATION SUMMARY -->
+        <!-- ================================================= -->
+
         <div class="card mb-3">
+
             <div class="card-body">
 
-                <h5>Observation Summary</h5>
+                <h5>
+                    Observation Summary
+                </h5>
 
-                <p>
+                <p class="mb-0">
                     {{ ai_summary.observation_summary }}
                 </p>
 
             </div>
+
         </div>
 
 
-        <!-- Observed Changes -->
+        <!-- ================================================= -->
+        <!-- REPEATED CONDITIONS - AI SUMMARY -->
+        <!-- ================================================= -->
+
         <div class="card mb-3">
+
             <div class="card-body">
 
-                <h5>Observed Changes</h5>
+                <h5>
+                    Repeated Conditions
+                </h5>
+
+                {% if ai_summary.repeated_conditions %}
+
+                    <ul class="mb-0">
+
+                        {% for condition in ai_summary.repeated_conditions %}
+
+                            <li class="mb-2">
+                                {{ condition }}
+                            </li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">
+                        No repeated observation conditions
+                        were identified during the selected
+                        observation period.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- OBSERVED CHANGES -->
+        <!-- ================================================= -->
+
+        <div class="card mb-3">
+
+            <div class="card-body">
+
+                <h5>
+                    Observed Changes
+                </h5>
 
                 {% if ai_summary.observed_changes %}
 
@@ -44,7 +115,9 @@
 
                         {% for change in ai_summary.observed_changes %}
 
-                            <li>{{ change }}</li>
+                            <li>
+                                {{ change }}
+                            </li>
 
                         {% endfor %}
 
@@ -59,48 +132,71 @@
                 {% endif %}
 
             </div>
+
         </div>
 
 
-        <!-- Evidence Interpretation -->
+        <!-- ================================================= -->
+        <!-- EVIDENCE INTERPRETATION -->
+        <!-- ================================================= -->
+
         <div class="card mb-3">
+
             <div class="card-body">
 
-                <h5>Evidence Interpretation</h5>
+                <h5>
+                    Evidence Interpretation
+                </h5>
 
                 <p class="mb-0">
                     {{ ai_summary.evidence_interpretation }}
                 </p>
 
             </div>
+
         </div>
 
 
-        <!-- Recommended Follow-up -->
+        <!-- ================================================= -->
+        <!-- RECOMMENDED FOLLOW-UP -->
+        <!-- ================================================= -->
+
         <div class="card mb-3">
+
             <div class="card-body">
 
-                <h5>Recommended Follow-up</h5>
+                <h5>
+                    Recommended Follow-up
+                </h5>
 
                 <p class="mb-0">
                     {{ ai_summary.recommended_follow_up }}
                 </p>
 
             </div>
+
         </div>
 
 
-        <!-- Disclaimer -->
+        <!-- ================================================= -->
+        <!-- DISCLAIMER -->
+        <!-- ================================================= -->
+
         <div class="alert alert-secondary">
 
-            <strong>Disclaimer:</strong>
+            <strong>
+                Disclaimer:
+            </strong>
 
             {{ ai_summary.disclaimer }}
 
         </div>
 
 
-        <!-- Structured Analysis -->
+        <!-- ================================================= -->
+        <!-- STRUCTURED ANALYSIS -->
+        <!-- ================================================= -->
+
         <div class="card mb-3">
 
             <div class="card-body">
@@ -111,42 +207,121 @@
                         View Analysis
                     </summary>
 
-                    <div class="mt-3">
+
+                    <div class="mt-4">
 
 
                         <!-- ================================= -->
-                        <!-- Observation Period -->
+                        <!-- OBSERVATION PERIOD -->
                         <!-- ================================= -->
 
-                        <h6>Observation Period</h6>
+                        <h5 class="mb-3">
+                            Observation Period
+                        </h5>
 
-                        <p>
-                            <strong>Observation Count:</strong>
-                            {{ summary_data.observation_count }}
+                        <p class="text-muted">
+                            Summary of the observations included
+                            in this AI analysis.
                         </p>
 
-                        <p>
-                            <strong>Observation Days:</strong>
-                            {{ summary_data.observation_days }}
-                        </p>
+
+                        <!-- ================================= -->
+                        <!-- OBSERVATION STATISTICS -->
+                        <!-- ================================= -->
+
+                        <div class="row g-3 mb-4">
+
+
+                            <!-- OBSERVATION COUNT -->
+
+                            <div class="col-md-4">
+
+                                <div class="border rounded p-3 h-100">
+
+                                    <div class="text-muted small">
+                                        Observation Count
+                                    </div>
+
+                                    <div class="fs-3 fw-semibold">
+                                        {{ observation_count }}
+                                    </div>
+
+                                    <div class="text-muted small">
+                                        Total observations analyzed
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- OBSERVATION DAYS -->
+
+                            <div class="col-md-4">
+
+                                <div class="border rounded p-3 h-100">
+
+                                    <div class="text-muted small">
+                                        Observation Days
+                                    </div>
+
+                                    <div class="fs-3 fw-semibold">
+                                        {{ observation_days }}
+                                    </div>
+
+                                    <div class="text-muted small">
+                                        Days containing observations
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- AVERAGE -->
+
+                            <div class="col-md-4">
+
+                                <div class="border rounded p-3 h-100">
+
+                                    <div class="text-muted small">
+                                        Average Per Day
+                                    </div>
+
+                                    <div class="fs-3 fw-semibold">
+                                        {{ average_observations_per_day }}
+                                    </div>
+
+                                    <div class="text-muted small">
+                                        Observations per observation day
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
 
 
                         <hr>
 
 
                         <!-- ================================= -->
-                        <!-- Repeated Conditions -->
+                        <!-- SYSTEM REPEATED CONDITIONS -->
                         <!-- ================================= -->
 
-                        <h6>Repeated Conditions</h6>
+                        <h5>
+                            Repeated Conditions
+                        </h5>
 
                         <p class="text-muted">
                             These are observation values that appeared
-                            repeatedly during the selected observation period.
+                            repeatedly during the selected observation
+                            period.
                         </p>
 
 
-                        {% if summary_data.analysis.repeated_conditions %}
+                        {% if repeated_conditions %}
 
                             <div class="table-responsive">
 
@@ -179,7 +354,7 @@
 
                                     <tbody>
 
-                                        {% for condition in summary_data.analysis.repeated_conditions %}
+                                        {% for condition in repeated_conditions %}
 
                                             <tr>
 
@@ -223,10 +398,12 @@
 
 
                         <!-- ================================= -->
-                        <!-- Trends -->
+                        <!-- TRENDS -->
                         <!-- ================================= -->
 
-                        <h6>Trends</h6>
+                        <h5>
+                            Trends
+                        </h5>
 
                         <p class="text-muted">
                             Trends show how the patient's observation
@@ -257,7 +434,7 @@
 
                                 <tbody>
 
-                                    {% for field, trend in summary_data.analysis.trends.items %}
+                                    {% for field, trend in trends.items %}
 
                                         {% if field != 'status' and field != 'observation_count' and field != 'observation_days' and field != 'average_observations_per_day' %}
 
@@ -287,11 +464,17 @@
                         <hr>
 
 
+
+                        <hr>
+
+
                         <!-- ================================= -->
-                        <!-- Supporting Research Evidence -->
+                        <!-- SUPPORTING RESEARCH EVIDENCE -->
                         <!-- ================================= -->
 
-                        <h6>Supporting Research Evidence</h6>
+                        <h5>
+                            Supporting Research Evidence
+                        </h5>
 
 
                         {% for paper in summary_data.research_evidence %}
@@ -307,7 +490,9 @@
 
                                     <p class="mb-1">
 
-                                        <strong>Authors:</strong>
+                                        <strong>
+                                            Authors:
+                                        </strong>
 
                                         {{ paper.authors }}
 
@@ -320,7 +505,9 @@
 
                                     <p class="mb-1">
 
-                                        <strong>Journal:</strong>
+                                        <strong>
+                                            Journal:
+                                        </strong>
 
                                         {{ paper.journal }}
 
@@ -348,7 +535,9 @@
 
                                     <p class="mb-1">
 
-                                        <strong>Source:</strong>
+                                        <strong>
+                                            Source:
+                                        </strong>
 
                                         {{ paper.source }}
 
@@ -359,16 +548,14 @@
 
                                 <p class="mb-1">
 
-                                    <strong>Verified:</strong>
+                                    <strong>
+                                        Verified:
+                                    </strong>
 
                                     {% if paper.verified %}
-
                                         Yes
-
                                     {% else %}
-
                                         No
-
                                     {% endif %}
 
                                 </p>
@@ -378,7 +565,9 @@
 
                                     <p class="mt-2 mb-0">
 
-                                        <strong>Key Finding:</strong>
+                                        <strong>
+                                            Key Finding:
+                                        </strong>
 
                                         {{ paper.key_finding }}
 
@@ -409,14 +598,27 @@
     {% endif %}
 
 
-    <!-- Back Button -->
+    <!-- ================================================= -->
+    <!-- BACK BUTTONS -->
+    <!-- ================================================= -->
 
-    <a
-        href="{% url 'observation:patient_history' patient.id %}"
-        class="btn btn-secondary"
-    >
-        Back to Observation History
-    </a>
+    <div class="d-flex gap-2">
+
+        <a
+            href="{% url 'observation:patient_history' patient.id %}"
+            class="btn btn-secondary"
+        >
+            ← Back to Observation History
+        </a>
+
+        <a
+            href="{% url 'observation:patient_ai_history' patient.id %}"
+            class="btn btn-outline-primary"
+        >
+            AI Analysis History
+        </a>
+
+    </div>
 
 </div>
 

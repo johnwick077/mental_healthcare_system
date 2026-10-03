@@ -1,22 +1,51 @@
 from django.shortcuts import render
+from django.http import JsonResponse, Http404
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import (CreateView,ListView,DetailView)
+from django.views.generic import (
+    CreateView,
+    ListView,
+    DetailView,
+)
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views import View
+
 from accounts.decorators import role_required
 from patient.models import Patient
 from .models import DailyObservation
 from .forms import DailyObservationForm
-from evidence.trend_analyzer import (get_patient_observations)
-from evidence.pattern_matcher import (find_matching_patterns,analyze_pattern_match,analyze_complete_observations,)
-from evidence.evidence_retriever import (get_evidence_for_pattern,get_general_research_evidence,)
-from evidence.summary_builder import (build_summary_data)
-from evidence.ai_summarizer import (generate_evidence_summary)
-from evidence.models import AISummaryHistory
-from evidence.summary_builder import (build_summary_data,make_json_safe,)
 
+from evidence.trend_analyzer import (
+    get_patient_observations,
+)
+
+from evidence.pattern_matcher import (
+    find_matching_patterns,
+    analyze_pattern_match,
+    analyze_complete_observations,
+)
+
+from evidence.evidence_retriever import (
+    get_evidence_for_pattern,
+    get_general_research_evidence,
+)
+
+from evidence.summary_builder import (
+    build_summary_data,
+    make_json_safe,
+)
+
+from evidence.ai_summarizer import (
+    generate_evidence_summary,
+)
+
+from evidence.models import AISummaryHistory
+
+
+# ============================================================
+# CREATE DAILY OBSERVATION
+# ============================================================
 
 @method_decorator(
     role_required("COUNSELLOR"),
@@ -55,6 +84,99 @@ class ObservationCreateView(
 
         return super().form_valid(form)
 
+
+# ============================================================
+# PATIENT INFORMATION FOR OBSERVATION FORM
+# ============================================================
+
+@method_decorator(
+    role_required("COUNSELLOR"),
+    name="dispatch"
+)
+class PatientObservationInfoView(
+    LoginRequiredMixin,
+    View
+):
+    """
+    Returns read-only patient information for the
+    selected patient.
+
+    Only the counsellor assigned to the patient can
+    retrieve this information.
+    """
+
+    def get(
+        self,
+        request,
+        patient_id
+    ):
+
+        patient = (
+            Patient.objects
+            .select_related(
+                "ward",
+                "assigned_counsellor__user"
+            )
+            .filter(
+                pk=patient_id,
+                assigned_counsellor__user=request.user,
+                is_active=True
+            )
+            .first()
+        )
+
+        if not patient:
+
+            raise Http404(
+                "Patient not found or not assigned to you."
+            )
+
+        return JsonResponse({
+
+            "id": patient.id,
+
+            "full_name": patient.full_name,
+
+            "age": patient.age,
+
+            "gender": patient.get_gender_display(),
+
+            "ward": (
+                patient.ward.name
+                if patient.ward
+                else "Not assigned"
+            ),
+
+            "known_conditions": (
+                patient.known_conditions
+                or "Not provided"
+            ),
+
+            "notes": (
+                patient.notes
+                or "Not provided"
+            ),
+
+            "care_focus": (
+                patient.care_focus
+                or "Not provided"
+            ),
+
+            "observation_focus": (
+                patient.observation_focus
+                or "Not provided"
+            ),
+
+            "baseline_notes": (
+                patient.baseline_notes
+                or "Not provided"
+            ),
+        })
+
+
+# ============================================================
+# OBSERVATION HISTORY
+# ============================================================
 
 @method_decorator(
     role_required("COUNSELLOR"),
@@ -123,6 +245,10 @@ class ObservationListView(
         return context
 
 
+# ============================================================
+# PATIENT OBSERVATION HISTORY
+# ============================================================
+
 class PatientObservationHistoryView(
     LoginRequiredMixin,
     ListView
@@ -144,9 +270,9 @@ class PatientObservationHistoryView(
             "patient_id"
         ]
 
-        # ---------------------------------------------
-        # Admin access
-        # ---------------------------------------------
+        # ----------------------------------------------------
+        # ADMIN ACCESS
+        # ----------------------------------------------------
 
         if self.request.user.role == "ADMIN":
 
@@ -154,14 +280,15 @@ class PatientObservationHistoryView(
                 pk=patient_id
             )
 
-        # ---------------------------------------------
-        # Counsellor access
-        # ---------------------------------------------
+        # ----------------------------------------------------
+        # COUNSELLOR ACCESS
+        # ----------------------------------------------------
 
         elif self.request.user.role == "COUNSELLOR":
 
             self.patient = (
-                Patient.objects.filter(
+                Patient.objects
+                .filter(
                     pk=patient_id,
                     assigned_counsellor__user=(
                         self.request.user
@@ -173,16 +300,12 @@ class PatientObservationHistoryView(
 
             if not self.patient:
 
-                from django.http import Http404
-
                 raise Http404(
                     "You are not authorized to "
                     "view this patient's history."
                 )
 
         else:
-
-            from django.http import Http404
 
             raise Http404(
                 "You are not authorized to "
@@ -214,10 +337,12 @@ class PatientObservationHistoryView(
         today = timezone.localdate()
 
         todays_count = (
-            DailyObservation.objects.filter(
+            DailyObservation.objects
+            .filter(
                 patient=self.patient,
                 date=today
-            ).count()
+            )
+            .count()
         )
 
         minimum_daily_observations = 3
@@ -248,6 +373,10 @@ class PatientObservationHistoryView(
         return context
 
 
+# ============================================================
+# AI OBSERVATION ANALYSIS
+# ============================================================
+
 class PatientAIAnalysisView(
     LoginRequiredMixin,
     View
@@ -257,19 +386,24 @@ class PatientAIAnalysisView(
     for a patient's recent observations.
     """
 
-    def post(self, request, patient_id):
+    def post(
+        self,
+        request,
+        patient_id
+    ):
 
-        # =================================================
-        # 1. Get patient
-        # =================================================
+        # ====================================================
+        # 1. GET PATIENT
+        # ====================================================
 
         patient = Patient.objects.get(
             pk=patient_id
         )
 
-        # =================================================
-        # 2. Get recent observations
-        # =================================================
+
+        # ====================================================
+        # 2. GET RECENT OBSERVATIONS
+        # ====================================================
 
         observations = list(
             get_patient_observations(
@@ -279,11 +413,13 @@ class PatientAIAnalysisView(
         )
 
         if not observations:
+
             return render(
                 request,
                 "observation/ai_analysis.html",
                 {
                     "patient": patient,
+
                     "error": (
                         "No recent observations are "
                         "available for analysis."
@@ -291,26 +427,33 @@ class PatientAIAnalysisView(
                 }
             )
 
-        # =================================================
-        # 3. Analyze ALL observation conditions
-        # =================================================
 
-        complete_analysis = analyze_complete_observations(
-            observations,
-            minimum_occurrences=2
+        # ====================================================
+        # 3. ANALYZE ALL OBSERVATION CONDITIONS
+        # ====================================================
+
+        complete_analysis = (
+            analyze_complete_observations(
+                observations,
+                minimum_occurrences=2
+            )
         )
 
-        # =================================================
-        # 4. Find research-backed observation patterns
-        # =================================================
 
-        matched_patterns = find_matching_patterns(
-            observations
+        # ====================================================
+        # 4. FIND RESEARCH-BACKED PATTERNS
+        # ====================================================
+
+        matched_patterns = (
+            find_matching_patterns(
+                observations
+            )
         )
 
-        # =================================================
-        # 5. Select a research pattern if available
-        # =================================================
+
+        # ====================================================
+        # 5. SELECT RESEARCH PATTERN
+        # ====================================================
 
         pattern = (
             matched_patterns[0]
@@ -318,20 +461,19 @@ class PatientAIAnalysisView(
             else None
         )
 
-        # =================================================
-        # 6. Analyze research pattern
-        # =================================================
+
+        # ====================================================
+        # 6. ANALYZE RESEARCH PATTERN
+        # ====================================================
 
         if pattern:
 
-            pattern_result = analyze_pattern_match(
-                pattern,
-                observations
+            pattern_result = (
+                analyze_pattern_match(
+                    pattern,
+                    observations
+                )
             )
-
-            # ---------------------------------------------
-            # Retrieve evidence for matched pattern
-            # ---------------------------------------------
 
             research_evidence = (
                 get_evidence_for_pattern(
@@ -341,12 +483,8 @@ class PatientAIAnalysisView(
 
         else:
 
-            # ---------------------------------------------
-            # No research pattern matched.
-            # This must NOT stop AI analysis.
-            # ---------------------------------------------
-
             pattern_result = {
+
                 "pattern_name": (
                     "Comprehensive Observation Analysis"
                 ),
@@ -377,11 +515,43 @@ class PatientAIAnalysisView(
                 ),
             }
 
-            research_evidence = get_general_research_evidence()
+            research_evidence = (
+                get_general_research_evidence()
+            )
 
-        # =================================================
-        # 7. Build structured summary data
-        # =================================================
+
+        # ====================================================
+        # 7. CALCULATE OBSERVATION PERIOD
+        # ====================================================
+
+        observation_dates = {
+            observation.date
+            for observation in observations
+            if observation.date
+        }
+
+        observation_count = len(
+            observations
+        )
+
+        observation_days = len(
+            observation_dates
+        )
+
+        average_observations_per_day = (
+            round(
+                observation_count
+                / observation_days,
+                2
+            )
+            if observation_days > 0
+            else 0
+        )
+
+
+        # ====================================================
+        # 8. BUILD STRUCTURED SUMMARY DATA
+        # ====================================================
 
         summary_data = build_summary_data(
             observations,
@@ -390,20 +560,45 @@ class PatientAIAnalysisView(
             complete_analysis=complete_analysis
         )
 
-        # =================================================
-        # 8. Generate AI summary
-        # =================================================
+
+        # Add observation period values explicitly.
+
+        summary_data[
+            "observation_count"
+        ] = observation_count
+
+        summary_data[
+            "observation_days"
+        ] = observation_days
+
+        summary_data[
+            "average_observations_per_day"
+        ] = (
+            average_observations_per_day
+        )
+
+
+        # ====================================================
+        # 9. GENERATE AI SUMMARY
+        # ====================================================
 
         ai_summary = generate_evidence_summary(
             summary_data
         )
 
-        # =================================================
-        # 9. Extract AI generated values
-        # =================================================
+
+        # ====================================================
+        # 10. EXTRACT AI GENERATED VALUES
+        # ====================================================
 
         observation_summary = (
             ai_summary.observation_summary
+        )
+
+        ai_repeated_conditions = getattr(
+            ai_summary,
+            "repeated_conditions",
+            []
         )
 
         observed_changes = (
@@ -422,9 +617,10 @@ class PatientAIAnalysisView(
             ai_summary.disclaimer
         )
 
-        # =================================================
-        # 10. Extract structured analysis
-        # =================================================
+
+        # ====================================================
+        # 11. EXTRACT STRUCTURED ANALYSIS
+        # ====================================================
 
         analysis_data = summary_data.get(
             "analysis",
@@ -448,9 +644,10 @@ class PatientAIAnalysisView(
             )
         )
 
-        # =================================================
-        # 11. Get complete condition analysis
-        # =================================================
+
+        # ====================================================
+        # 12. GET COMPLETE CONDITION ANALYSIS
+        # ====================================================
 
         condition_analysis = (
             complete_analysis.get(
@@ -466,57 +663,143 @@ class PatientAIAnalysisView(
             )
         )
 
-        # =================================================
-        # 12. Build JSON-safe structured analysis
-        # =================================================
+
+        # ====================================================
+        # 13. BUILD COMPLETE JSON-SAFE HISTORY DATA
+        # ====================================================
 
         structured_analysis = make_json_safe(
             {
-                "trends": trends,
 
-                "matched_fields": (
-                    matched_fields
+                # --------------------------------------------
+                # Observation Period
+                # --------------------------------------------
+
+                "observation_period": {
+
+                    "observation_count": (
+                        observation_count
+                    ),
+
+                    "observation_days": (
+                        observation_days
+                    ),
+
+                    "average_observations_per_day": (
+                        average_observations_per_day
+                    ),
+                },
+
+
+                # --------------------------------------------
+                # System-calculated repeated conditions
+                # --------------------------------------------
+
+                "repeated_conditions": (
+                    repeated_conditions
                 ),
 
-                "matched_pattern": (
-                    matched_pattern_data
+
+                # --------------------------------------------
+                # AI-readable repeated conditions
+                # --------------------------------------------
+
+                "ai_repeated_conditions": (
+                    ai_repeated_conditions
                 ),
+
+
+                # --------------------------------------------
+                # Complete condition analysis
+                # --------------------------------------------
 
                 "condition_analysis": (
                     condition_analysis
                 ),
 
-                "repeated_conditions": (
-                    repeated_conditions
+
+                # --------------------------------------------
+                # Trends
+                # --------------------------------------------
+
+                "trends": (
+                    trends
                 ),
+
+
+                # --------------------------------------------
+                # Matched fields
+                # --------------------------------------------
+
+                "matched_fields": (
+                    matched_fields
+                ),
+
+
+                # --------------------------------------------
+                # Matched research pattern
+                # --------------------------------------------
+
+                "matched_pattern": (
+                    matched_pattern_data
+                ),
+
+
+                # --------------------------------------------
+                # Research evidence
+                # --------------------------------------------
+
+                "research_evidence": (
+                    research_evidence
+                ),
+
+
+                # --------------------------------------------
+                # Complete AI-generated summary
+                # --------------------------------------------
+
+                "ai_summary": {
+
+                    "observation_summary": (
+                        observation_summary
+                    ),
+
+                    "repeated_conditions": (
+                        ai_repeated_conditions
+                    ),
+
+                    "observed_changes": (
+                        observed_changes
+                    ),
+
+                    "evidence_interpretation": (
+                        evidence_interpretation
+                    ),
+
+                    "recommended_follow_up": (
+                        recommended_follow_up
+                    ),
+
+                    "disclaimer": (
+                        disclaimer
+                    ),
+                },
             }
         )
 
-        # =================================================
-        # 13. Calculate observation days
-        # =================================================
 
-        observation_dates = {
-            observation.date
-            for observation in observations
-            if observation.date
-        }
-
-        observation_days = len(
-            observation_dates
-        )
-
-        # =================================================
-        # 14. Save AI summary history
-        # =================================================
+        # ====================================================
+        # 14. SAVE COMPLETE AI SUMMARY HISTORY
+        # ====================================================
 
         AISummaryHistory.objects.create(
+
             patient=patient,
 
             generated_by=request.user,
 
-            observation_count=len(
-                observations
+            observation_count=(
+                observation_count
             ),
 
             observation_days=(
@@ -558,14 +841,16 @@ class PatientAIAnalysisView(
             ),
         )
 
-        # =================================================
-        # 15. Display current analysis
-        # =================================================
+
+        # ====================================================
+        # 15. DISPLAY CURRENT ANALYSIS
+        # ====================================================
 
         return render(
             request,
             "observation/ai_analysis.html",
             {
+
                 "patient": patient,
 
                 "observations": observations,
@@ -592,7 +877,9 @@ class PatientAIAnalysisView(
                     analysis_data
                 ),
 
-                "trends": trends,
+                "trends": (
+                    trends
+                ),
 
                 "matched_fields": (
                     matched_fields
@@ -600,10 +887,6 @@ class PatientAIAnalysisView(
 
                 "matched_pattern_data": (
                     matched_pattern_data
-                ),
-
-                "condition_analysis": (
-                    condition_analysis
                 ),
 
                 "repeated_conditions": (
@@ -633,8 +916,26 @@ class PatientAIAnalysisView(
                 "disclaimer": (
                     disclaimer
                 ),
+
+                "observation_count": (
+                    observation_count
+                ),
+
+                "observation_days": (
+                    observation_days
+                ),
+
+                "average_observations_per_day": (
+                    average_observations_per_day
+                ),
             }
         )
+
+
+# ============================================================
+# AI SUMMARY HISTORY
+# ============================================================
+
 class PatientAISummaryHistoryView(
     LoginRequiredMixin,
     ListView
@@ -658,17 +959,19 @@ class PatientAISummaryHistoryView(
             pk=patient_id
         )
 
-        # ---------------------------------------------
-        # Admin access
-        # ---------------------------------------------
+
+        # ----------------------------------------------------
+        # ADMIN ACCESS
+        # ----------------------------------------------------
 
         if self.request.user.is_staff:
 
             allowed = True
 
-        # ---------------------------------------------
-        # Counsellor access
-        # ---------------------------------------------
+
+        # ----------------------------------------------------
+        # COUNSELLOR ACCESS
+        # ----------------------------------------------------
 
         elif hasattr(
             self.request.user,
@@ -684,11 +987,11 @@ class PatientAISummaryHistoryView(
 
             allowed = False
 
+
         if not allowed:
 
-            from django.http import Http404
-
             raise Http404
+
 
         self.patient = patient
 
@@ -718,6 +1021,10 @@ class PatientAISummaryHistoryView(
         return context
 
 
+# ============================================================
+# AI SUMMARY DETAIL
+# ============================================================
+
 class PatientAISummaryDetailView(
     LoginRequiredMixin,
     DetailView
@@ -744,17 +1051,19 @@ class PatientAISummaryDetailView(
 
         patient = summary.patient
 
-        # ---------------------------------------------
-        # Admin access
-        # ---------------------------------------------
+
+        # ----------------------------------------------------
+        # ADMIN ACCESS
+        # ----------------------------------------------------
 
         if self.request.user.is_staff:
 
             return summary
 
-        # ---------------------------------------------
-        # Counsellor access
-        # ---------------------------------------------
+
+        # ----------------------------------------------------
+        # COUNSELLOR ACCESS
+        # ----------------------------------------------------
 
         if (
             hasattr(
@@ -767,6 +1076,5 @@ class PatientAISummaryDetailView(
 
             return summary
 
-        from django.http import Http404
 
         raise Http404

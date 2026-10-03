@@ -12,23 +12,47 @@ class AISummary(BaseModel):
     """
 
     observation_summary: str = Field(
-        description="A concise summary of the patient's observed changes."
+        description=(
+            "A concise summary of the patient's "
+            "recorded observations."
+        )
+    )
+
+    repeated_conditions: List[str] = Field(
+        description=(
+            "Repeated observation conditions identified "
+            "from the supplied repeated_conditions data. "
+            "Only include conditions explicitly supported "
+            "by the supplied data."
+        )
     )
 
     observed_changes: List[str] = Field(
-        description="Important changes identified from the supplied observations."
+        description=(
+            "Important changes or trends identified "
+            "from the supplied observations and analysis."
+        )
     )
 
     evidence_interpretation: str = Field(
-        description="Explanation of what the supplied research evidence says about the observed pattern."
+        description=(
+            "Explanation of what the supplied research "
+            "evidence says about the observed pattern."
+        )
     )
 
     recommended_follow_up: str = Field(
-        description="A cautious recommendation for continued observation or professional review."
+        description=(
+            "A cautious recommendation for continued "
+            "observation or professional review."
+        )
     )
 
     disclaimer: str = Field(
-        description="A clear statement that this is not a medical diagnosis."
+        description=(
+            "A clear statement that this is not "
+            "a medical diagnosis."
+        )
     )
 
 
@@ -67,8 +91,10 @@ IMPORTANT RULES:
    datasets, statistics, or conclusions.
 
 4. Clearly distinguish between:
+
    - observations recorded for the patient
-   - analysis/trends calculated by the system
+   - repeated conditions calculated by the system
+   - analysis and trends calculated by the system
    - research evidence supplied in the input
 
 5. Research papers are provided for general contextual
@@ -77,69 +103,75 @@ IMPORTANT RULES:
 6. A research paper must NEVER be presented as proof that
    the individual patient has a particular condition.
 
-7. If one or more research papers are supplied in
-   "research_evidence":
+7. If research evidence is supplied, use only the supplied
+   research information.
 
-   - Identify the most relevant paper or papers by their
-     exact supplied title.
-   - Mention the publication year when available.
-   - Briefly describe the relevant finding, method, or
-     research approach using ONLY the supplied abstract,
-     key_finding, and dataset information.
-   - Explain how the research provides general context
-     for the observed pattern.
-   - Do NOT create a connection that is not supported by
-     the supplied research information.
+8. Do not use outside knowledge to add research findings.
 
-8. If "research_evidence" contains one or more papers,
-   DO NOT say:
-   "No research evidence was provided."
-   Instead, reference the supplied research evidence.
+9. Use the supplied trend values exactly as provided.
 
-9. If the supplied research papers are only generally
-   related to the observations and do not directly support
-   the specific observation pattern, clearly state this
-   limitation.
+10. Do NOT change, reverse, or reinterpret trend values.
 
-10. If "research_evidence" is empty, explicitly state that
-    research evidence was not available for interpretation.
+11. Mention worsening, improving, or stable only when
+    that trend is present in the supplied analysis.
 
-11. Use the supplied trend values exactly as provided.
-
-12. Do NOT change, reverse, or reinterpret trend values.
-
-13. Mention a trend such as worsening, improving, or stable
-    only when that trend is present in the supplied analysis.
-
-14. The summary must be suitable for a counsellor reviewing
+12. The summary must be suitable for a counsellor reviewing
     recorded daily observations.
 
-15. Recommended follow-up should be limited to continued
+13. Recommended follow-up should be limited to continued
     observation, review of recorded changes, or appropriate
     professional assessment.
 
-16. Do NOT provide treatment instructions or medical
-    diagnosis.
+14. Do NOT provide treatment instructions.
 
-17. Always state that the generated result is not a
-    medical diagnosis.
+15. Do NOT provide a medical diagnosis.
 
-18. In this system, POI means exactly:
+16. Always state that the generated result is not
+    a medical diagnosis.
+
+17. In this system, POI means exactly:
     "Patient Observation Index".
 
-19. Never interpret POI as "Priority of Interest".
+18. Never interpret POI as "Priority of Interest".
 
-20. If POI is mentioned, use:
+19. If POI is mentioned, use:
     "Patient Observation Index (POI)".
 
-21. Do not infer information that is not present in the
-    supplied input.
+20. Do not infer information that is not present
+    in the supplied input.
 
-22. Do not use outside knowledge to add research findings.
-    Use only the research information supplied below.
+21. Do not invent repeated conditions.
+
+22. The repeated_conditions field contains conditions
+    identified by the system from repeated observation
+    values.
+
+23. Only report repeated conditions that are present
+    in the supplied repeated_conditions data.
+
+24. Repeated observations must NOT be converted into
+    medical diagnoses.
 
 --------------------------------------------------
-RESEARCH EVIDENCE HANDLING
+REPEATED CONDITIONS
+--------------------------------------------------
+
+Use the supplied "repeated_conditions" field.
+
+If repeated conditions exist, summarize them clearly.
+
+For example:
+
+- Poor sleep was repeatedly recorded.
+- Withdrawn behaviour was repeatedly recorded.
+
+Do not say that these observations prove a disorder
+or medical condition.
+
+If no repeated conditions exist, return an empty list.
+
+--------------------------------------------------
+RESEARCH EVIDENCE
 --------------------------------------------------
 
 The supplied research papers are supporting evidence,
@@ -156,18 +188,15 @@ For each relevant paper, use only the supplied fields:
 - source
 - DOI or paper URL when available
 
-Do not invent information that is missing from these fields.
+Do not invent missing information.
 
-If multiple papers are supplied, select only the papers
-that are relevant to the observed pattern instead of
-mentioning every paper unnecessarily.
-
-If the evidence is general rather than directly related
-to the observed pattern, explicitly state that it provides
-general context rather than patient-specific evidence.
+If research evidence is general rather than directly
+related to the observed pattern, clearly state that it
+provides general context rather than patient-specific
+evidence.
 
 --------------------------------------------------
-STRUCTURED OBSERVATION AND RESEARCH EVIDENCE
+STRUCTURED OBSERVATION AND RESEARCH DATA
 --------------------------------------------------
 
 {data}
@@ -176,33 +205,46 @@ STRUCTURED OBSERVATION AND RESEARCH EVIDENCE
 OUTPUT REQUIREMENTS
 --------------------------------------------------
 
-Return the result according to the requested structured schema.
-
-The fields must contain:
-
 observation_summary:
-A concise summary of the recorded observations and
-important trends.
+
+Provide a concise summary of the recorded observations
+and important trends.
+
+repeated_conditions:
+
+Return a list of repeated observation conditions
+supported by the supplied repeated_conditions data.
+
+Do not invent conditions.
+
+Do not diagnose the patient.
 
 observed_changes:
-A list of important observed changes or trends supported
-by the supplied data.
+
+Return important observed changes or trends supported
+by the supplied analysis.
 
 evidence_interpretation:
-Explain the relevant supplied research evidence.
+
+Explain relevant supplied research evidence.
+
 When research evidence exists, mention the relevant
-paper title and publication year and explain its
-general relevance. Do not claim that the paper proves
-anything about this individual patient.
+paper title and publication year when available.
+
+Do not claim that research proves anything about
+this individual patient.
 
 recommended_follow_up:
-Give a cautious follow-up focused on continued observation,
-review, or professional assessment when appropriate.
+
+Provide cautious follow-up focused on continued
+observation, review, or professional assessment.
 
 disclaimer:
-Clearly state that the result is an AI-generated
-observation summary and is not a medical diagnosis.
+
+Clearly state that this is an AI-generated observation
+summary and is not a medical diagnosis.
 """
+
 
 def generate_evidence_summary(data):
     """
@@ -211,7 +253,9 @@ def generate_evidence_summary(data):
 
     client = get_gemini_client()
 
-    prompt = build_summary_prompt(data)
+    prompt = build_summary_prompt(
+        data
+    )
 
     response = client.models.generate_content(
         model="gemini-3.5-flash-lite",

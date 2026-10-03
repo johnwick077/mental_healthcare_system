@@ -8,6 +8,10 @@
 
     <div class="form-panel">
 
+        <!-- ================================================= -->
+        <!-- HEADER -->
+        <!-- ================================================= -->
+
         <div class="form-panel-header">
 
             <h2>Record Daily Observation</h2>
@@ -20,59 +24,342 @@
         </div>
 
 
+        <!-- ================================================= -->
+        <!-- AUTOMATIC TIME -->
+        <!-- ================================================= -->
+
         <div class="auto-time-notice">
 
             <div>
-                <strong>Time recorded automatically</strong>
+
+                <strong>
+                    Time recorded automatically
+                </strong>
 
                 <div>
                     The current date and time will be recorded
                     automatically when this observation is saved.
                 </div>
+
             </div>
 
         </div>
 
 
+        <!-- ================================================= -->
+        <!-- FORM -->
+        <!-- ================================================= -->
+
         <form method="post">
 
             {% csrf_token %}
 
-            {% for field in form %}
 
-                <div class="form-group-app">
+            <!-- ============================================= -->
+            <!-- PATIENT -->
+            <!-- ============================================= -->
 
-                    <label for="{{ field.id_for_label }}">
-                        {{ field.label }}
-                    </label>
+            <div class="form-group-app">
 
-                    {{ field }}
+                <label for="{{ form.patient.id_for_label }}">
+                    {{ form.patient.label }}
+                </label>
 
-                    {% if field.help_text %}
-                        <small class="text-muted">
-                            {{ field.help_text }}
-                        </small>
-                    {% endif %}
+                {{ form.patient }}
 
-                    {% for error in field.errors %}
-                        <div class="form-error-app">
-                            {{ error }}
-                        </div>
-                    {% endfor %}
+                {% if form.patient.help_text %}
+
+                    <small class="text-muted">
+                        {{ form.patient.help_text }}
+                    </small>
+
+                {% endif %}
+
+                {% for error in form.patient.errors %}
+
+                    <div class="form-error-app">
+                        {{ error }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- PATIENT INFORMATION -->
+            <!-- ================================================= -->
+
+            <div
+                id="patient-information"
+                class="patient-information-card"
+                style="display: none;"
+            >
+
+                <div class="patient-information-header">
+
+                    <div>
+
+                        <h4>
+                            Patient Information
+                        </h4>
+
+                        <p>
+                            Previously documented patient information
+                            for observation context.
+                        </p>
+
+                    </div>
 
                 </div>
+
+
+                <!-- BASIC INFORMATION -->
+
+                <div class="patient-basic-grid">
+
+                    <div class="patient-info-item">
+
+                        <span class="patient-info-label">
+                            Patient
+                        </span>
+
+                        <span
+                            id="patient-full-name"
+                            class="patient-info-value"
+                        >
+                            -
+                        </span>
+
+                    </div>
+
+
+                    <div class="patient-info-item">
+
+                        <span class="patient-info-label">
+                            Age
+                        </span>
+
+                        <span
+                            id="patient-age"
+                            class="patient-info-value"
+                        >
+                            -
+                        </span>
+
+                    </div>
+
+
+                    <div class="patient-info-item">
+
+                        <span class="patient-info-label">
+                            Gender
+                        </span>
+
+                        <span
+                            id="patient-gender"
+                            class="patient-info-value"
+                        >
+                            -
+                        </span>
+
+                    </div>
+
+
+                    <div class="patient-info-item">
+
+                        <span class="patient-info-label">
+                            Ward
+                        </span>
+
+                        <span
+                            id="patient-ward"
+                            class="patient-info-value"
+                        >
+                            -
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- DOCUMENTED CONDITION -->
+
+                <div class="patient-info-section">
+
+                    <div class="patient-info-label">
+                        Known Condition(s)
+                    </div>
+
+                    <div
+                        id="patient-known-conditions"
+                        class="patient-info-text"
+                    >
+                        -
+                    </div>
+
+                </div>
+
+
+                <!-- PATIENT DESCRIPTION -->
+
+                <div class="patient-info-section">
+
+                    <div class="patient-info-label">
+                        Patient Description
+                    </div>
+
+                    <div
+                        id="patient-notes"
+                        class="patient-info-text"
+                    >
+                        -
+                    </div>
+
+                </div>
+
+
+                <!-- CARE FOCUS -->
+
+                <div class="patient-info-section">
+
+                    <div class="patient-info-label">
+                        Care Focus
+                    </div>
+
+                    <div
+                        id="patient-care-focus"
+                        class="patient-info-text"
+                    >
+                        -
+                    </div>
+
+                </div>
+
+
+                <!-- OBSERVATION FOCUS -->
+
+                <div class="patient-info-section">
+
+                    <div class="patient-info-label">
+                        Observation Focus
+                    </div>
+
+                    <div
+                        id="patient-observation-focus"
+                        class="patient-info-text"
+                    >
+                        -
+                    </div>
+
+                </div>
+
+
+                <!-- BASELINE -->
+
+                <div class="patient-info-section">
+
+                    <div class="patient-info-label">
+                        Baseline Notes
+                    </div>
+
+                    <div
+                        id="patient-baseline-notes"
+                        class="patient-info-text"
+                    >
+                        -
+                    </div>
+
+                </div>
+
+
+                <div class="patient-info-disclaimer">
+
+                    This information is documented patient information
+                    provided by authorized staff. It is not an
+                    AI-generated diagnosis.
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- DAILY OBSERVATION -->
+            <!-- ================================================= -->
+
+            <div class="observation-section-title">
+
+                <h4>
+                    Today's Observation
+                </h4>
+
+                <p>
+                    Record what you observe during your routine
+                    interaction with the patient.
+                </p>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- OBSERVATION FIELDS -->
+            <!-- ================================================= -->
+
+            {% for field in form %}
+
+                {% if field.name != 'patient' %}
+
+                    <div class="form-group-app">
+
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+
+                        {{ field }}
+
+                        {% if field.help_text %}
+
+                            <small class="text-muted">
+                                {{ field.help_text }}
+                            </small>
+
+                        {% endif %}
+
+                        {% for error in field.errors %}
+
+                            <div class="form-error-app">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
 
             {% endfor %}
 
 
+            <!-- ================================================= -->
+            <!-- NON FIELD ERRORS -->
+            <!-- ================================================= -->
+
             {% if form.non_field_errors %}
 
                 <div class="alert alert-danger">
+
                     {{ form.non_field_errors }}
+
                 </div>
 
             {% endif %}
 
+
+            <!-- ================================================= -->
+            <!-- BUTTONS -->
+            <!-- ================================================= -->
 
             <div class="form-actions-app">
 
@@ -97,5 +384,443 @@
     </div>
 
 </div>
+
+
+<!-- ========================================================= -->
+<!-- PATIENT INFORMATION JAVASCRIPT -->
+<!-- ========================================================= -->
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const patientSelect =
+            document.getElementById('id_patient');
+
+        const patientInformation =
+            document.getElementById(
+                'patient-information'
+            );
+
+
+        if (!patientSelect) {
+            return;
+        }
+
+
+        function setPatientValue(
+            elementId,
+            value
+        ) {
+
+            const element =
+                document.getElementById(elementId);
+
+            if (element) {
+
+                element.textContent =
+                    value || 'Not provided';
+
+            }
+
+        }
+
+
+        function clearPatientInformation() {
+
+            patientInformation.style.display =
+                'none';
+
+            setPatientValue(
+                'patient-full-name',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-age',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-gender',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-ward',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-known-conditions',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-notes',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-care-focus',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-observation-focus',
+                '-'
+            );
+
+            setPatientValue(
+                'patient-baseline-notes',
+                '-'
+            );
+        }
+
+
+        function loadPatientInformation() {
+
+            const patientId =
+                patientSelect.value;
+
+
+            if (!patientId) {
+
+                clearPatientInformation();
+
+                return;
+            }
+
+
+            patientInformation.style.display =
+                'block';
+
+
+            setPatientValue(
+                'patient-full-name',
+                'Loading...'
+            );
+
+
+            fetch(
+                "{% url 'observation:patient_observation_info' 0 %}"
+                    .replace(
+                        '/0/info/',
+                        '/' + patientId + '/info/'
+                    ),
+                {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With':
+                            'XMLHttpRequest'
+                    }
+                }
+            )
+            .then(
+                function (response) {
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            'Unable to load patient information.'
+                        );
+
+                    }
+
+                    return response.json();
+
+                }
+            )
+            .then(
+                function (data) {
+
+                    setPatientValue(
+                        'patient-full-name',
+                        data.full_name
+                    );
+
+                    setPatientValue(
+                        'patient-age',
+                        data.age
+                    );
+
+                    setPatientValue(
+                        'patient-gender',
+                        data.gender
+                    );
+
+                    setPatientValue(
+                        'patient-ward',
+                        data.ward
+                    );
+
+                    setPatientValue(
+                        'patient-known-conditions',
+                        data.known_conditions
+                    );
+
+                    setPatientValue(
+                        'patient-notes',
+                        data.notes
+                    );
+
+                    setPatientValue(
+                        'patient-care-focus',
+                        data.care_focus
+                    );
+
+                    setPatientValue(
+                        'patient-observation-focus',
+                        data.observation_focus
+                    );
+
+                    setPatientValue(
+                        'patient-baseline-notes',
+                        data.baseline_notes
+                    );
+
+                }
+            )
+            .catch(
+                function (error) {
+
+                    console.error(error);
+
+                    patientInformation.style.display =
+                        'block';
+
+                    setPatientValue(
+                        'patient-full-name',
+                        'Unable to load patient information.'
+                    );
+
+                }
+            );
+
+        }
+
+
+        patientSelect.addEventListener(
+            'change',
+            loadPatientInformation
+        );
+
+
+        /*
+         * If the form already has a selected patient,
+         * load their information automatically.
+         */
+        if (patientSelect.value) {
+
+            loadPatientInformation();
+
+        }
+
+    }
+);
+
+</script>
+
+
+<!-- ========================================================= -->
+<!-- PATIENT INFORMATION STYLES -->
+<!-- ========================================================= -->
+
+<style>
+
+.patient-information-card {
+
+    margin-top: 24px;
+    margin-bottom: 30px;
+
+    padding: 24px;
+
+    border: 1px solid #dee2e6;
+
+    border-radius: 12px;
+
+    background: #f8f9fa;
+
+}
+
+
+.patient-information-header {
+
+    margin-bottom: 20px;
+
+}
+
+
+.patient-information-header h4 {
+
+    margin-bottom: 4px;
+
+    font-weight: 600;
+
+}
+
+
+.patient-information-header p {
+
+    margin-bottom: 0;
+
+    color: #6c757d;
+
+}
+
+
+.patient-basic-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 16px;
+
+    margin-bottom: 20px;
+
+}
+
+
+.patient-info-item {
+
+    background: #ffffff;
+
+    border: 1px solid #e9ecef;
+
+    border-radius: 8px;
+
+    padding: 14px;
+
+}
+
+
+.patient-info-label {
+
+    display: block;
+
+    font-size: 0.82rem;
+
+    font-weight: 600;
+
+    color: #6c757d;
+
+    margin-bottom: 5px;
+
+}
+
+
+.patient-info-value {
+
+    display: block;
+
+    font-weight: 500;
+
+    color: #212529;
+
+}
+
+
+.patient-info-section {
+
+    background: #ffffff;
+
+    border: 1px solid #e9ecef;
+
+    border-radius: 8px;
+
+    padding: 15px;
+
+    margin-bottom: 12px;
+
+}
+
+
+.patient-info-text {
+
+    white-space: pre-line;
+
+    color: #343a40;
+
+    line-height: 1.6;
+
+}
+
+
+.patient-info-disclaimer {
+
+    margin-top: 18px;
+
+    padding: 12px 14px;
+
+    border-radius: 8px;
+
+    background: #fff3cd;
+
+    color: #664d03;
+
+    font-size: 0.9rem;
+
+}
+
+
+.observation-section-title {
+
+    margin-top: 25px;
+
+    margin-bottom: 20px;
+
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid #dee2e6;
+
+}
+
+
+.observation-section-title h4 {
+
+    margin-bottom: 4px;
+
+    font-weight: 600;
+
+}
+
+
+.observation-section-title p {
+
+    margin-bottom: 0;
+
+    color: #6c757d;
+
+}
+
+
+@media (max-width: 768px) {
+
+    .patient-basic-grid {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+}
+
+
+@media (max-width: 480px) {
+
+    .patient-basic-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+}
+
+</style>
 
 {% endblock %}
