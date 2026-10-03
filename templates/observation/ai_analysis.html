@@ -18,6 +18,7 @@
 
     {% else %}
 
+        <!-- Observation Summary -->
         <div class="card mb-3">
             <div class="card-body">
 
@@ -30,202 +31,385 @@
             </div>
         </div>
 
+
+        <!-- Observed Changes -->
         <div class="card mb-3">
             <div class="card-body">
 
                 <h5>Observed Changes</h5>
 
-                <ul>
-                    {% for change in ai_summary.observed_changes %}
-                        <li>{{ change }}</li>
-                    {% endfor %}
-                </ul>
+                {% if ai_summary.observed_changes %}
+
+                    <ul class="mb-0">
+
+                        {% for change in ai_summary.observed_changes %}
+
+                            <li>{{ change }}</li>
+
+                        {% endfor %}
+
+                    </ul>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">
+                        No significant changes were identified.
+                    </p>
+
+                {% endif %}
 
             </div>
         </div>
 
+
+        <!-- Evidence Interpretation -->
         <div class="card mb-3">
             <div class="card-body">
 
                 <h5>Evidence Interpretation</h5>
 
-                <p>
+                <p class="mb-0">
                     {{ ai_summary.evidence_interpretation }}
                 </p>
 
             </div>
         </div>
 
+
+        <!-- Recommended Follow-up -->
         <div class="card mb-3">
             <div class="card-body">
 
                 <h5>Recommended Follow-up</h5>
 
-                <p>
+                <p class="mb-0">
                     {{ ai_summary.recommended_follow_up }}
                 </p>
 
             </div>
         </div>
 
+
+        <!-- Disclaimer -->
         <div class="alert alert-secondary">
+
             <strong>Disclaimer:</strong>
+
             {{ ai_summary.disclaimer }}
+
         </div>
+
+
+        <!-- Structured Analysis -->
         <div class="card mb-3">
-    <div class="card-body">
 
-        <details>
-            <summary class="fw-bold">
-                View Structured Analysis
-            </summary>
+            <div class="card-body">
 
-            <div class="mt-3">
+                <details>
 
-                <h6>Observation Period</h6>
+                    <summary class="fw-bold">
+                        View Analysis
+                    </summary>
 
-                <p>
-                    <strong>Observation Count:</strong>
-                    {{ summary_data.observation_period.observation_count }}
-                </p>
+                    <div class="mt-3">
 
-                <hr>
 
-                <h6>Matched Pattern</h6>
+                        <!-- ================================= -->
+                        <!-- Observation Period -->
+                        <!-- ================================= -->
 
-                <p>
-                    <strong>Name:</strong>
-                    {{ summary_data.matched_pattern.name }}
-                </p>
+                        <h6>Observation Period</h6>
 
-                <p>
-                    <strong>Description:</strong>
-                    {{ summary_data.matched_pattern.description }}
-                </p>
+                        <p>
+                            <strong>Observation Count:</strong>
+                            {{ summary_data.observation_count }}
+                        </p>
 
-                <p>
-                    <strong>Minimum Days:</strong>
-                    {{ summary_data.matched_pattern.minimum_days }}
-                </p>
+                        <p>
+                            <strong>Observation Days:</strong>
+                            {{ summary_data.observation_days }}
+                        </p>
 
-                <p>
-                    <strong>Minimum Occurrences:</strong>
-                    {{ summary_data.matched_pattern.minimum_occurrences }}
-                </p>
 
-                <hr>
+                        <hr>
 
-                <h6>Trends</h6>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
+                        <!-- ================================= -->
+                        <!-- Repeated Conditions -->
+                        <!-- ================================= -->
 
-                        <thead class="table-light">
-                            <tr>
-                                <th>Observation Field</th>
-                                <th>Trend</th>
-                            </tr>
-                        </thead>
+                        <h6>Repeated Conditions</h6>
 
-                        <tbody>
+                        <p class="text-muted">
+                            These are observation values that appeared
+                            repeatedly during the selected observation period.
+                        </p>
 
-                            {% for field, trend in summary_data.analysis.trends.items %}
-                                {% if field != 'status' and field != 'observation_count' %}
-                                <tr>
-                                    <td>{{ field|title }}</td>
-                                    <td>{{ trend }}</td>
-                                </tr>
+
+                        {% if summary_data.analysis.repeated_conditions %}
+
+                            <div class="table-responsive">
+
+                                <table class="table table-bordered table-sm">
+
+                                    <thead class="table-light">
+
+                                        <tr>
+
+                                            <th>
+                                                Observation Field
+                                            </th>
+
+                                            <th>
+                                                Value
+                                            </th>
+
+                                            <th>
+                                                Occurrences
+                                            </th>
+
+                                            <th>
+                                                Percentage
+                                            </th>
+
+                                        </tr>
+
+                                    </thead>
+
+
+                                    <tbody>
+
+                                        {% for condition in summary_data.analysis.repeated_conditions %}
+
+                                            <tr>
+
+                                                <td>
+                                                    {{ condition.field }}
+                                                </td>
+
+                                                <td>
+                                                    {{ condition.label }}
+                                                </td>
+
+                                                <td>
+                                                    {{ condition.occurrences }}
+                                                </td>
+
+                                                <td>
+                                                    {{ condition.percentage }}%
+                                                </td>
+
+                                            </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+
+                                </table>
+
+                            </div>
+
+                        {% else %}
+
+                            <p class="text-muted">
+                                No repeated conditions were identified
+                                during the observation period.
+                            </p>
+
+                        {% endif %}
+
+
+                        <hr>
+
+
+                        <!-- ================================= -->
+                        <!-- Trends -->
+                        <!-- ================================= -->
+
+                        <h6>Trends</h6>
+
+                        <p class="text-muted">
+                            Trends show how the patient's observation
+                            values changed during the selected period.
+                        </p>
+
+
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered table-sm">
+
+                                <thead class="table-light">
+
+                                    <tr>
+
+                                        <th>
+                                            Observation Field
+                                        </th>
+
+                                        <th>
+                                            Trend
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    {% for field, trend in summary_data.analysis.trends.items %}
+
+                                        {% if field != 'status' and field != 'observation_count' and field != 'observation_days' and field != 'average_observations_per_day' %}
+
+                                            <tr>
+
+                                                <td>
+                                                    {{ field|title }}
+                                                </td>
+
+                                                <td>
+                                                    {{ trend }}
+                                                </td>
+
+                                            </tr>
+
+                                        {% endif %}
+
+                                    {% endfor %}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+
+                        <hr>
+
+
+                        <!-- ================================= -->
+                        <!-- Supporting Research Evidence -->
+                        <!-- ================================= -->
+
+                        <h6>Supporting Research Evidence</h6>
+
+
+                        {% for paper in summary_data.research_evidence %}
+
+                            <div class="border rounded p-3 mb-3">
+
+                                <h6 class="mb-2">
+                                    {{ paper.title }}
+                                </h6>
+
+
+                                {% if paper.authors %}
+
+                                    <p class="mb-1">
+
+                                        <strong>Authors:</strong>
+
+                                        {{ paper.authors }}
+
+                                    </p>
+
                                 {% endif %}
-                            {% endfor %}
 
-                        </tbody>
 
-                    </table>
-                </div>
+                                {% if paper.journal %}
 
-                <hr>
+                                    <p class="mb-1">
 
-                <h6>Matched Fields</h6>
+                                        <strong>Journal:</strong>
 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
+                                        {{ paper.journal }}
 
-                        <thead class="table-light">
-                            <tr>
-                                <th>Field</th>
-                                <th>Expected Value</th>
-                                <th>Occurrences</th>
-                            </tr>
-                        </thead>
+                                    </p>
 
-                        <tbody>
+                                {% endif %}
 
-                            {% for field, details in summary_data.analysis.matched_fields.items %}
-                            <tr>
-                                <td>{{ field|title }}</td>
-                                <td>{{ details.expected_value }}</td>
-                                <td>{{ details.occurrences }}</td>
-                            </tr>
-                            {% endfor %}
 
-                        </tbody>
+                                {% if paper.publication_year %}
 
-                    </table>
-                </div>
+                                    <p class="mb-1">
 
-                <hr>
+                                        <strong>
+                                            Publication Year:
+                                        </strong>
 
-                <h6>Supporting Research Evidence</h6>
+                                        {{ paper.publication_year }}
 
-                {% for paper in summary_data.research_evidence %}
+                                    </p>
 
-                    <div class="border rounded p-3 mb-2">
+                                {% endif %}
 
-                        <strong>{{ paper.title }}</strong>
 
-                        <p class="mb-1">
-                            <strong>Authors:</strong>
-                            {{ paper.authors }}
-                        </p>
+                                {% if paper.source %}
 
-                        <p class="mb-1">
-                            <strong>Journal:</strong>
-                            {{ paper.journal }}
-                        </p>
+                                    <p class="mb-1">
 
-                        <p class="mb-1">
-                            <strong>Publication Year:</strong>
-                            {{ paper.publication_year }}
-                        </p>
+                                        <strong>Source:</strong>
 
-                        <p class="mb-1">
-                            <strong>Source:</strong>
-                            {{ paper.source }}
-                        </p>
+                                        {{ paper.source }}
 
-                        <p class="mb-1">
-                            <strong>Verified:</strong>
-                            {{ paper.verified }}
-                        </p>
+                                    </p>
+
+                                {% endif %}
+
+
+                                <p class="mb-1">
+
+                                    <strong>Verified:</strong>
+
+                                    {% if paper.verified %}
+
+                                        Yes
+
+                                    {% else %}
+
+                                        No
+
+                                    {% endif %}
+
+                                </p>
+
+
+                                {% if paper.key_finding %}
+
+                                    <p class="mt-2 mb-0">
+
+                                        <strong>Key Finding:</strong>
+
+                                        {{ paper.key_finding }}
+
+                                    </p>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% empty %}
+
+                            <p class="text-muted">
+                                No verified supporting research evidence
+                                was found for this analysis.
+                            </p>
+
+                        {% endfor %}
 
                     </div>
 
-                {% empty %}
-
-                    <p class="text-muted">
-                        No verified supporting research evidence is linked
-                        to this matched pattern.
-                    </p>
-
-                {% endfor %}
+                </details>
 
             </div>
 
-        </details>
+        </div>
 
-    </div>
-</div>
+
     {% endif %}
+
+
+    <!-- Back Button -->
 
     <a
         href="{% url 'observation:patient_history' patient.id %}"
