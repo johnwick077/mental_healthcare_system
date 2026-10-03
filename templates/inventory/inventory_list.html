@@ -1,32 +1,278 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-4">
-    <h3>Inventory Stock</h3>
-    <form method="get" class="row g-2 mb-3">
-    <div class="col-md-4">
-        <input type="text" name="search" class="form-control" placeholder="Search item..." value="{{ request.GET.search }}">
+
+<div class="container mt-4 mb-5">
+
+    <!-- HEADER -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h3 class="mb-1">Inventory Stock</h3>
+
+            <p class="text-muted mb-0">
+                View and manage available resources.
+            </p>
+        </div>
+
     </div>
-    <div class="col-md-3 form-check mt-2">
-        <input type="checkbox" name="low_stock" value="1" class="form-check-input" id="lowStockCheck" {% if request.GET.low_stock %}checked{% endif %} onchange="this.form.submit()">
-        <label class="form-check-label" for="lowStockCheck">Low stock only</label>
+
+
+    <!-- SEARCH / FILTER -->
+
+    <div class="card shadow-sm border-0 mb-4">
+
+        <div class="card-body">
+
+            <form method="get"
+                  class="row g-3 align-items-end">
+
+                <!-- SEARCH -->
+
+                <div class="col-md-5">
+
+                    <label class="form-label">
+                        Search
+                    </label>
+
+                    <input type="text"
+                           name="search"
+                           class="form-control"
+                           placeholder="Search resource..."
+                           value="{{ request.GET.search }}">
+
+                </div>
+
+
+                <!-- LOW STOCK -->
+
+                <div class="col-md-3">
+
+                    <div class="form-check mt-4">
+
+                        <input type="checkbox"
+                               name="low_stock"
+                               value="1"
+                               class="form-check-input"
+                               id="lowStockCheck"
+                               {% if request.GET.low_stock %}
+                                   checked
+                               {% endif %}>
+
+                        <label class="form-check-label"
+                               for="lowStockCheck">
+
+                            Low stock only
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SEARCH BUTTON -->
+
+                <div class="col-md-2">
+
+                    <button type="submit"
+                            class="btn btn-primary w-100">
+
+                        Search
+
+                    </button>
+
+                </div>
+
+
+                <!-- CLEAR -->
+
+                <div class="col-md-2">
+
+                    <a href="{% url 'inventory:inventory_list' %}"
+                       class="btn btn-outline-secondary w-100">
+
+                        Clear
+
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
     </div>
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-secondary w-100">Search</button>
+
+
+    <!-- INVENTORY TABLE -->
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover mb-0">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Item</th>
+
+                            <th>Stock</th>
+
+                            <th>Low Stock Limit</th>
+
+                            <th>Status</th>
+
+                            <th class="text-end">
+                                Action
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for inv in inventory_items %}
+
+                            <tr>
+
+                                <td class="fw-semibold">
+                                    {{ inv.item.name }}
+                                </td>
+
+
+                                <td>
+                                    {{ inv.quantity_in_stock }}
+                                    {{ inv.item.unit }}
+                                </td>
+
+
+                                <td>
+                                    {{ inv.item.low_stock_threshold }}
+                                    {{ inv.item.unit }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if inv.is_low_stock %}
+
+                                        <span class="badge bg-danger">
+                                            Low Stock
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-success">
+                                            OK
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td class="text-end">
+
+                                    <a href="{% url 'inventory:inventory_update' inv.pk %}"
+                                       class="btn btn-sm btn-outline-primary">
+
+                                        Edit
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td colspan="5"
+                                    class="text-center py-4 text-muted">
+
+                                    No inventory items found.
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
     </div>
-</form>
-    <table class="table table-bordered">
-        <thead><tr><th>Item</th><th>Stock</th><th>Status</th></tr></thead>
-        <tbody>
-            {% for inv in inventory_items %}
-            <tr>
-                <td>{{ inv.item.name }}</td>
-                <td>{{ inv.quantity_in_stock }} {{ inv.item.unit }}</td>
-                <td>{% if inv.is_low_stock %}<span class="badge bg-danger">Low Stock</span>{% else %}<span class="badge bg-success">OK</span>{% endif %}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3" class="text-center">No inventory items yet.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+
+    <!-- PAGINATION -->
+
+    {% if is_paginated %}
+
+        <nav class="mt-4">
+
+            <ul class="pagination justify-content-center">
+
+                {% if page_obj.has_previous %}
+
+                    <li class="page-item">
+
+                        <a class="page-link"
+                           href="?page={{ page_obj.previous_page_number }}&search={{ request.GET.search }}&low_stock={{ request.GET.low_stock }}">
+
+                            Previous
+
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+
+                <li class="page-item active">
+
+                    <span class="page-link">
+
+                        {{ page_obj.number }}
+
+                    </span>
+
+                </li>
+
+
+                {% if page_obj.has_next %}
+
+                    <li class="page-item">
+
+                        <a class="page-link"
+                           href="?page={{ page_obj.next_page_number }}&search={{ request.GET.search }}&low_stock={{ request.GET.low_stock }}">
+
+                            Next
+
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+        </nav>
+
+    {% endif %}
+
 </div>
+
 {% endblock %}

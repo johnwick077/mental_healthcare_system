@@ -1,53 +1,292 @@
 {% extends 'base.html' %}
+
+{% block title %}Pending Resource Requests | MHCore{% endblock %}
+
 {% block content %}
+
 <div class="container mt-4">
-    <h3>Pending Resource Requests</h3>
 
-    <form method="get" class="row g-2 mb-3">
-        <div class="col-md-4">
-            <input type="text" name="search" class="form-control" placeholder="Search by patient name..." value="{{ request.GET.search }}">
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-secondary w-100">Search</button>
-        </div>
-    </form>
+    <div class="mb-4">
 
-    <table class="table table-bordered">
-        <thead><tr><th>ID</th><th>Patient</th><th>Requested By</th><th>Items</th><th>Actions</th></tr></thead>
-        <tbody>
-            {% for req in requests %}
-            <tr>
-                <td>{{ req.id }}</td>
-                <td>{{ req.patient.full_name }}</td>
-                <td>{{ req.requested_by }}</td>
-                <td>{% for item in req.items.all %}{{ item.quantity_requested }}x {{ item.item.name }}<br>{% endfor %}</td>
-                <td>
-                    <form method="post" action="{% url 'inventory:approve_request' req.pk %}" style="display:inline">
-                        {% csrf_token %}<button class="btn btn-sm btn-success">Approve</button>
-                    </form>
-                    <form method="post" action="{% url 'inventory:reject_request' req.pk %}" style="display:inline">
-                        {% csrf_token %}<button class="btn btn-sm btn-danger">Reject</button>
-                    </form>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5" class="text-center">No pending requests found.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+        <h3 class="mb-1">
+            Pending Resource Requests
+        </h3>
+
+        <p class="text-muted mb-0">
+            Review resource requests submitted by counsellors.
+        </p>
+
+    </div>
+
+
+    <!-- Search -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <form method="get" class="row g-2">
+
+                <div class="col-12 col-md-5">
+
+                    <input
+                        type="text"
+                        name="search"
+                        class="form-control"
+                        placeholder="Search by patient name..."
+                        value="{{ request.GET.search }}"
+                    >
+
+                </div>
+
+
+                <div class="col-6 col-md-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-secondary w-100"
+                    >
+                        Search
+                    </button>
+
+                </div>
+
+
+                <div class="col-6 col-md-2">
+
+                    <a
+                        href="{% url 'inventory:pending_requests' %}"
+                        class="btn btn-outline-secondary w-100"
+                    >
+                        Clear
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- Pending Requests -->
+
+    <div class="card">
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover mb-0">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Patient</th>
+
+                            <th>Requested By</th>
+
+                            <th>Items</th>
+
+                            <th>Requested At</th>
+
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for req in requests %}
+
+                            <tr>
+
+                                <td>
+                                    #{{ req.id }}
+                                </td>
+
+
+                                <td>
+
+                                    <strong>
+                                        {{ req.patient.full_name }}
+                                    </strong>
+
+                                </td>
+
+
+                                <td>
+                                    {{ req.requested_by }}
+                                </td>
+
+
+                                <td>
+
+                                    {% for item in req.items.all %}
+
+                                        <div class="mb-1">
+
+                                            <span class="fw-semibold">
+                                                {{ item.quantity_requested }}
+                                            </span>
+
+                                            ×
+                                            {{ item.item.name }}
+
+                                        </div>
+
+                                    {% empty %}
+
+                                        <span class="text-muted">
+                                            No items
+                                        </span>
+
+                                    {% endfor %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ req.requested_at|date:"d M Y, h:i A" }}
+                                </td>
+
+
+                                <td>
+
+                                    <div class="d-flex gap-2 flex-wrap">
+
+                                        <!-- Approve -->
+
+                                        <form
+                                            method="post"
+                                            action="{% url 'inventory:approve_request' req.pk %}"
+                                        >
+
+                                            {% csrf_token %}
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-sm btn-success"
+                                            >
+                                                Approve
+                                            </button>
+
+                                        </form>
+
+
+                                        <!-- Reject -->
+
+                                        <form
+                                            method="post"
+                                            action="{% url 'inventory:reject_request' req.pk %}"
+                                        >
+
+                                            {% csrf_token %}
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-sm btn-danger"
+                                            >
+                                                Reject
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="text-center py-4"
+                                >
+                                    No pending requests found.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Pagination -->
 
     {% if is_paginated %}
-    <nav>
-        <ul class="pagination">
-            {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Previous</a></li>
-            {% endif %}
-            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
-            {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Next</a></li>
-            {% endif %}
-        </ul>
-    </nav>
+
+        <nav class="mt-4">
+
+            <ul class="pagination justify-content-center">
+
+                {% if page_obj.has_previous %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                        >
+                            Previous
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+
+                <li class="page-item active">
+
+                    <span class="page-link">
+
+                        Page {{ page_obj.number }}
+                        of {{ page_obj.paginator.num_pages }}
+
+                    </span>
+
+                </li>
+
+
+                {% if page_obj.has_next %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+                        >
+                            Next
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+        </nav>
+
     {% endif %}
+
 </div>
+
 {% endblock %}

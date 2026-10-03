@@ -1,20 +1,326 @@
 {% extends 'base.html' %}
+
+{% block title %}My Resource Requests | MHCore{% endblock %}
+
 {% block content %}
+
 <div class="container mt-4">
-    <h3>My Resource Requests</h3>
-    <table class="table table-bordered">
-        <thead><tr><th>ID</th><th>Patient</th><th>Status</th><th>Requested At</th></tr></thead>
-        <tbody>
-            {% for req in requests %}
-            <tr>
-                <td>{{ req.id }}</td><td>{{ req.patient.full_name }}</td>
-                <td><span class="badge bg-secondary">{{ req.get_status_display }}</span></td>
-                <td>{{ req.requested_at }}</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="4" class="text-center">No requests yet.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h3 class="mb-1">My Resource Requests</h3>
+
+            <p class="text-muted mb-0">
+                Resource requests submitted by you
+            </p>
+
+        </div>
+
+
+        <a
+            href="{% url 'inventory:request_add' %}"
+            class="btn btn-primary"
+        >
+            New Request
+        </a>
+
+    </div>
+
+
+    <!-- Status Filter -->
+
+    <div class="card mb-4">
+
+        <div class="card-body">
+
+            <form method="get" class="row g-2 align-items-end">
+
+                <div class="col-12 col-md-4">
+
+                    <label class="form-label">
+                        Filter by Status
+                    </label>
+
+                    <select
+                        name="status"
+                        class="form-select"
+                    >
+
+                        <option value="">
+                            All Requests
+                        </option>
+
+                        {% for value, label in status_choices %}
+
+                            <option
+                                value="{{ value }}"
+                                {% if request.GET.status == value %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ label }}
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-6 col-md-2">
+
+                    <button
+                        type="submit"
+                        class="btn btn-secondary w-100"
+                    >
+                        Filter
+                    </button>
+
+                </div>
+
+
+                <div class="col-6 col-md-2">
+
+                    <a
+                        href="{% url 'inventory:my_requests' %}"
+                        class="btn btn-outline-secondary w-100"
+                    >
+                        Clear
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- Requests -->
+
+    <div class="card">
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover mb-0">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Patient</th>
+
+                            <th>Items</th>
+
+                            <th>Status</th>
+
+                            <th>Requested At</th>
+
+                            <th>Reviewed</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for req in requests %}
+
+                            <tr>
+
+                                <td>
+                                    #{{ req.id }}
+                                </td>
+
+
+                                <td>
+                                    <strong>
+                                        {{ req.patient.full_name }}
+                                    </strong>
+                                </td>
+
+
+                                <td>
+
+                                    {% for item in req.items.all %}
+
+                                        <div>
+                                            {{ item.quantity_requested }}
+                                            ×
+                                            {{ item.item.name }}
+                                        </div>
+
+                                    {% empty %}
+
+                                        <span class="text-muted">
+                                            No items
+                                        </span>
+
+                                    {% endfor %}
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if req.status == 'PENDING' %}
+
+                                        <span class="badge bg-warning text-dark">
+                                            Pending
+                                        </span>
+
+                                    {% elif req.status == 'APPROVED' %}
+
+                                        <span class="badge bg-primary">
+                                            Approved
+                                        </span>
+
+                                    {% elif req.status == 'REJECTED' %}
+
+                                        <span class="badge bg-danger">
+                                            Rejected
+                                        </span>
+
+                                    {% elif req.status == 'ISSUED' %}
+
+                                        <span class="badge bg-success">
+                                            Issued
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+                                            {{ req.get_status_display }}
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ req.requested_at|date:"d M Y, h:i A" }}
+                                </td>
+
+
+                                <td>
+
+                                    {% if req.reviewed_at %}
+
+                                        <div>
+                                            {{ req.reviewed_at|date:"d M Y, h:i A" }}
+                                        </div>
+
+                                        {% if req.reviewed_by %}
+
+                                            <small class="text-muted">
+                                                by {{ req.reviewed_by }}
+                                            </small>
+
+                                        {% endif %}
+
+                                    {% else %}
+
+                                        <span class="text-muted">
+                                            —
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td
+                                    colspan="6"
+                                    class="text-center py-4"
+                                >
+                                    No resource requests found.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Pagination -->
+
+    {% if is_paginated %}
+
+        <nav class="mt-4">
+
+            <ul class="pagination justify-content-center">
+
+                {% if page_obj.has_previous %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+                        >
+                            Previous
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+
+                <li class="page-item active">
+
+                    <span class="page-link">
+                        Page {{ page_obj.number }}
+                        of {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                </li>
+
+
+                {% if page_obj.has_next %}
+
+                    <li class="page-item">
+
+                        <a
+                            class="page-link"
+                            href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}"
+                        >
+                            Next
+                        </a>
+
+                    </li>
+
+                {% endif %}
+
+            </ul>
+
+        </nav>
+
+    {% endif %}
+
 </div>
+
 {% endblock %}

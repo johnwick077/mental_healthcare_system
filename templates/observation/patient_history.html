@@ -6,22 +6,305 @@
 
 <div class="container app-page">
 
+    <!-- ========================================= -->
     <!-- Page Header -->
+    <!-- ========================================= -->
 
     <div class="page-header mb-4">
 
         <div>
+
             <h2>Observation History</h2>
 
             <p class="text-muted mb-0">
                 {{ patient.full_name }} — longitudinal observation record
             </p>
+
+        </div>
+
+
+        <!-- Back to Dashboard -->
+
+        <div class="page-header-actions">
+
+            <a
+                href="{% url 'dashboard:counsellor_dashboard' %}"
+                class="history-back-btn"
+            >
+                <span class="history-back-icon">←</span>
+                <span>Dashboard</span>
+            </a>
+
         </div>
 
     </div>
 
 
+    <!-- ========================================= -->
+    <!-- Patient Information -->
+    <!-- ========================================= -->
+
+    <div class="form-panel mb-4">
+
+        <div class="form-panel-header">
+
+            <h4>Patient Information</h4>
+
+            <p>
+                Documented patient information and observation context.
+            </p>
+
+        </div>
+
+
+        <div class="row g-4">
+
+            <!-- Basic Information -->
+
+            <div class="col-12 col-md-6">
+
+                <div class="patient-info-item">
+
+                    <div class="patient-info-label">
+                        Patient Name
+                    </div>
+
+                    <div class="patient-info-value">
+                        {{ patient.full_name }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-12 col-md-3">
+
+                <div class="patient-info-item">
+
+                    <div class="patient-info-label">
+                        Age
+                    </div>
+
+                    <div class="patient-info-value">
+                        {{ patient.age }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="col-12 col-md-3">
+
+                <div class="patient-info-item">
+
+                    <div class="patient-info-label">
+                        Gender
+                    </div>
+
+                    <div class="patient-info-value">
+                        {{ patient.get_gender_display }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Ward -->
+
+            <div class="col-12 col-md-6">
+
+                <div class="patient-info-item">
+
+                    <div class="patient-info-label">
+                        Ward
+                    </div>
+
+                    <div class="patient-info-value">
+                        {{ patient.ward|default:"Not assigned" }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Assigned Counsellor -->
+
+            <div class="col-12 col-md-6">
+
+                <div class="patient-info-item">
+
+                    <div class="patient-info-label">
+                        Assigned Counsellor
+                    </div>
+
+                    <div class="patient-info-value">
+                        {{ patient.assigned_counsellor|default:"Not assigned" }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Known Conditions -->
+
+            <div class="col-12">
+
+                <div class="patient-info-item">
+
+                    <div class="patient-info-label">
+                        Known Condition(s)
+                    </div>
+
+                    <div class="patient-info-value">
+
+                        {% if patient.known_conditions %}
+                            {{ patient.known_conditions|linebreaksbr }}
+                        {% else %}
+                            <span class="text-muted">
+                                No documented condition provided.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Patient Description -->
+
+            <div class="col-12">
+
+                <div class="patient-info-item">
+
+                    <div class="patient-info-label">
+                        Patient Description
+                    </div>
+
+                    <div class="patient-info-value">
+
+                        {% if patient.notes %}
+                            {{ patient.notes|linebreaksbr }}
+                        {% else %}
+                            <span class="text-muted">
+                                No patient description provided.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Care Focus -->
+
+            <div class="col-12 col-md-4">
+
+                <div class="patient-info-item h-100">
+
+                    <div class="patient-info-label">
+                        Care Focus
+                    </div>
+
+                    <div class="patient-info-value">
+
+                        {% if patient.care_focus %}
+                            {{ patient.care_focus|linebreaksbr }}
+                        {% else %}
+                            <span class="text-muted">
+                                Not provided.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Observation Focus -->
+
+            <div class="col-12 col-md-4">
+
+                <div class="patient-info-item h-100">
+
+                    <div class="patient-info-label">
+                        Observation Focus
+                    </div>
+
+                    <div class="patient-info-value">
+
+                        {% if patient.observation_focus %}
+                            {{ patient.observation_focus|linebreaksbr }}
+                        {% else %}
+                            <span class="text-muted">
+                                Not provided.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Baseline Notes -->
+
+            <div class="col-12 col-md-4">
+
+                <div class="patient-info-item h-100">
+
+                    <div class="patient-info-label">
+                        Baseline Notes
+                    </div>
+
+                    <div class="patient-info-value">
+
+                        {% if patient.baseline_notes %}
+                            {{ patient.baseline_notes|linebreaksbr }}
+                        {% else %}
+                            <span class="text-muted">
+                                Not provided.
+                            </span>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Information Disclaimer -->
+
+        <div class="alert alert-info mt-4 mb-0">
+
+            <strong>Information Notice:</strong>
+
+            This information is documented patient information
+            provided by authorized staff. It is not an AI-generated
+            diagnosis.
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================================= -->
     <!-- Today's Observation Progress -->
+    <!-- ========================================= -->
 
     <div class="form-panel mb-4">
 
@@ -39,7 +322,9 @@
 
         <div class="row align-items-center">
 
-            <div class="col-md-4">
+            <!-- Observation Count -->
+
+            <div class="col-12 col-md-4 mb-3 mb-md-0">
 
                 <div class="observation-progress-number">
 
@@ -56,13 +341,17 @@
             </div>
 
 
-            <div class="col-md-8">
+            <!-- Progress Status -->
+
+            <div class="col-12 col-md-8">
 
                 {% if daily_target_completed %}
 
                     <div class="alert alert-success mb-0">
 
-                        <strong>Daily target completed.</strong>
+                        <strong>
+                            Daily target completed.
+                        </strong>
 
                         Minimum observation coverage has been
                         completed for today.
@@ -74,9 +363,11 @@
                     <div class="alert alert-warning mb-0">
 
                         <strong>
+
                             {{ todays_remaining }}
                             observation{{ todays_remaining|pluralize }}
                             remaining.
+
                         </strong>
 
                         Continue recording observations for today's
@@ -93,36 +384,64 @@
     </div>
 
 
-    <!-- AI Analysis -->
+    <!-- ========================================= -->
+    <!-- AI Analysis Actions -->
+    <!-- ========================================= -->
 
-    <div class="mb-4">
+    <div class="form-panel mb-4">
 
-        <form
-            method="post"
-            action="{% url 'observation:patient_ai_analysis' patient.id %}"
-        >
+        <div class="form-panel-header">
 
-            {% csrf_token %}
+            <h4>AI Observation Analysis</h4>
 
-            <button
-                type="submit"
-                class="btn btn-primary"
+            <p>
+                Generate an AI-supported summary from the patient's
+                recorded observations and view previous analyses.
+            </p>
+
+        </div>
+
+
+        <div class="d-flex justify-content-center
+                    align-items-center flex-wrap gap-2">
+
+            <!-- Generate AI Analysis -->
+
+            <form
+                method="post"
+                action="{% url 'observation:patient_ai_analysis' patient.id %}"
+                class="m-0"
             >
-                Generate AI Analysis
-            </button>
+
+                {% csrf_token %}
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Generate AI Analysis
+                </button>
+
+            </form>
+
+
+            <!-- AI Analysis History -->
+
             <a
-            href="{% url 'observation:patient_ai_history' patient.id %}"
-            class="btn btn-outline-secondary"
+                href="{% url 'observation:patient_ai_history' patient.id %}"
+                class="btn btn-outline-secondary"
             >
                 AI Analysis History
             </a>
 
-        </form>
+        </div>
 
     </div>
 
 
+    <!-- ========================================= -->
     <!-- Observation Timeline -->
+    <!-- ========================================= -->
 
     <div class="form-panel">
 
@@ -146,7 +465,9 @@
                     <div class="card-body">
 
 
-                        <!-- Date and Time -->
+                        <!-- ================================= -->
+                        <!-- Date / Time / POI -->
+                        <!-- ================================= -->
 
                         <div class="d-flex justify-content-between
                                     align-items-start flex-wrap mb-3">
@@ -154,16 +475,12 @@
                             <div>
 
                                 <h5 class="mb-1">
-
                                     {{ obs.date }}
-
                                 </h5>
 
                                 <div class="text-muted">
-
                                     Observation time:
                                     {{ obs.time }}
-
                                 </div>
 
                             </div>
@@ -184,14 +501,20 @@
                         </div>
 
 
+                        <!-- ================================= -->
                         <!-- Observation Factors -->
+                        <!-- ================================= -->
 
                         <div class="row g-3">
 
 
-                            <div class="col-md-6">
+                            <!-- Mood -->
 
-                                <strong>Mood</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Mood
+                                </strong>
 
                                 <div>
                                     {{ obs.get_mood_display }}
@@ -200,9 +523,13 @@
                             </div>
 
 
-                            <div class="col-md-6">
+                            <!-- Behaviour -->
 
-                                <strong>Behaviour</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Behaviour
+                                </strong>
 
                                 <div>
                                     {{ obs.get_behaviour_display }}
@@ -211,9 +538,13 @@
                             </div>
 
 
-                            <div class="col-md-6">
+                            <!-- Sleep -->
 
-                                <strong>Sleep</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Sleep
+                                </strong>
 
                                 <div>
                                     {{ obs.get_sleep_quality_display }}
@@ -222,9 +553,13 @@
                             </div>
 
 
-                            <div class="col-md-6">
+                            <!-- Appetite -->
 
-                                <strong>Appetite</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Appetite
+                                </strong>
 
                                 <div>
                                     {{ obs.get_appetite_display }}
@@ -233,9 +568,13 @@
                             </div>
 
 
-                            <div class="col-md-6">
+                            <!-- Personal Hygiene -->
 
-                                <strong>Personal Hygiene</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Personal Hygiene
+                                </strong>
 
                                 <div>
                                     {{ obs.get_personal_hygiene_display }}
@@ -244,9 +583,13 @@
                             </div>
 
 
-                            <div class="col-md-6">
+                            <!-- Communication -->
 
-                                <strong>Communication</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Communication
+                                </strong>
 
                                 <div>
                                     {{ obs.get_communication_display }}
@@ -255,9 +598,13 @@
                             </div>
 
 
-                            <div class="col-md-6">
+                            <!-- Participation -->
 
-                                <strong>Participation</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Participation
+                                </strong>
 
                                 <div>
                                     {{ obs.get_participation_display }}
@@ -266,9 +613,13 @@
                             </div>
 
 
-                            <div class="col-md-6">
+                            <!-- Recorded By -->
 
-                                <strong>Recorded By</strong>
+                            <div class="col-12 col-md-6">
+
+                                <strong>
+                                    Recorded By
+                                </strong>
 
                                 <div>
                                     {{ obs.counsellor|default:"—" }}
@@ -279,13 +630,17 @@
                         </div>
 
 
+                        <!-- ================================= -->
                         <!-- Remarks -->
+                        <!-- ================================= -->
 
                         {% if obs.remarks %}
 
                             <div class="mt-3 pt-3 border-top">
 
-                                <strong>Remarks</strong>
+                                <strong>
+                                    Remarks
+                                </strong>
 
                                 <p class="mb-0 mt-1">
                                     {{ obs.remarks }}
@@ -318,13 +673,16 @@
     </div>
 
 
+    <!-- ========================================= -->
     <!-- Pagination -->
+    <!-- ========================================= -->
 
     {% if is_paginated %}
 
         <nav class="mt-4">
 
-            <ul class="pagination">
+            <ul class="pagination justify-content-center">
+
 
                 {% if page_obj.has_previous %}
 
@@ -369,6 +727,7 @@
 
                 {% endif %}
 
+
             </ul>
 
         </nav>
@@ -376,5 +735,169 @@
     {% endif %}
 
 </div>
+
+
+<!-- ========================================= -->
+<!-- Page-specific styling -->
+<!-- ========================================= -->
+
+<style>
+
+    /*
+     * Back to Dashboard button
+     */
+
+    .history-back-btn {
+
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 8px 14px;
+
+        border: 1px solid rgba(255, 255, 255, 0.15);
+
+        border-radius: 8px;
+
+        background: transparent;
+
+        color: inherit;
+
+        text-decoration: none;
+
+        font-size: 0.9rem;
+
+        transition:
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease;
+
+    }
+
+
+    .history-back-btn:hover {
+
+        background: rgba(255, 255, 255, 0.06);
+
+        border-color: rgba(255, 255, 255, 0.28);
+
+        color: inherit;
+
+        text-decoration: none;
+
+        transform: translateX(-2px);
+
+    }
+
+
+    .history-back-icon {
+
+        font-size: 1.1rem;
+
+        line-height: 1;
+
+    }
+
+
+    /*
+     * Patient information
+     */
+
+    .patient-info-item {
+
+        height: 100%;
+
+        padding: 14px 16px;
+
+        border-radius: 10px;
+
+        background: rgba(255, 255, 255, 0.03);
+
+        border: 1px solid rgba(255, 255, 255, 0.08);
+
+    }
+
+
+    .patient-info-label {
+
+        font-size: 0.78rem;
+
+        font-weight: 600;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+
+        color: var(--bs-secondary-color);
+
+        margin-bottom: 6px;
+
+    }
+
+
+    .patient-info-value {
+
+        font-size: 0.95rem;
+
+        line-height: 1.6;
+
+        word-break: break-word;
+
+    }
+
+
+    /*
+     * Keep the header aligned properly
+     * on desktop screens.
+     */
+
+    .page-header {
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: flex-start;
+
+        gap: 20px;
+
+    }
+
+
+    /*
+     * Mobile layout
+     */
+
+    @media (max-width: 576px) {
+
+        .page-header {
+
+            flex-direction: column;
+
+            gap: 15px;
+
+        }
+
+
+        .page-header-actions {
+
+            width: 100%;
+
+        }
+
+
+        .history-back-btn {
+
+            width: 100%;
+
+            justify-content: center;
+
+        }
+
+    }
+
+</style>
 
 {% endblock %}
